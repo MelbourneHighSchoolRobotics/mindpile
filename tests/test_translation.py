@@ -5,6 +5,5 @@ import IntermediateFormat
 import unittest
 
 class TestTranslation(unittest.TestCase):
-    def t
-
-class 
+    def todo(self):
+        pass
