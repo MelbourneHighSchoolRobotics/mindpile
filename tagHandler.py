@@ -4,7 +4,7 @@ import intermediateFormat
 from typing import Tuple, List, Optional, Union
 
 
-def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, str]:
+def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, Optional[str]]:
     """
     Returns the type of sequence/flow terminal and the wire it attaches to
     """
@@ -20,8 +20,6 @@ def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, str]:
             "Encountered Unexpected Bare terminal in method call", elem
         )
 
-    pass
-
 
 def whileLoop(elem: WhileLoop) -> intermediateFormat.SequenceBlock:
     childBlocks: List[intermediateFormat.SequenceBlock] = []
@@ -29,8 +27,8 @@ def whileLoop(elem: WhileLoop) -> intermediateFormat.SequenceBlock:
     seqOut: Optional[str] = None
 
     # this could be changed to a special representation, not sure - TODO
-    indexMethod: Optional[intermediateFormat.MethodCall] = None
-    stopMethod: Optional[intermediateFormat.MethodCall] = None
+    indexMethod: Optional[intermediateFormat.SequenceBlock] = None
+    stopMethod: Optional[intermediateFormat.SequenceBlock] = None
 
     for child in elem:
         tag = utility.removeNameSpace(child.tag)
@@ -75,7 +73,7 @@ def configureableMethodTerminal(
             )
 
 
-def methodCall(elem: MethodCall) -> intermediateFormat.MethodCall:
+def methodCall(elem: MethodCall) -> intermediateFormat.SequenceBlock:
 
     functionName = elem.attrib["Target"]
 
@@ -114,7 +112,7 @@ def translateElementToIRForm(elem):
     tagToIRFunc = {
         "ConfigurableMethodCall": methodCall,
         "ConfigurableWhileLoop": whileLoop,
-        "Terminal": lambda x: "Terminal??",
+        "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "whileMethod???",
         "Wire": lambda x: "Wire??",
     }
