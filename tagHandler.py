@@ -1,13 +1,61 @@
 import utility
 from instructionTypes import *
 import intermediateFormat
+from typing import Tuple, List, Optional, Union
 
 
-def whileLoop(elem: WhileLoop):
-    return "While loop"
+def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, str]:
+    """
+    Returns the type of sequence/flow terminal and the wire it attaches to
+    """
+    wire = None
+    if "Wire" in elem.attrib:
+        wire = elem.attrib["Wire"]
+    if elem.attrib["Id"] == "SequenceIn":
+        return "out", wire
+    elif elem.attrib["Id"] == "SequenceOut":
+        return "in", wire
+    else:
+        raise NotImplementedError(
+            "Encountered Unexpected Bare terminal in method call", elem
+        )
+
+    pass
 
 
-def configureableMethodTerminal(elem):
+def whileLoop(elem: WhileLoop) -> intermediateFormat.SequenceBlock:
+    childBlocks: List[intermediateFormat.SequenceBlock] = []
+    seqIn: Optional[str] = None
+    seqOut: Optional[str] = None
+
+    # this could be changed to a special representation, not sure - TODO
+    indexMethod: Optional[intermediateFormat.MethodCall] = None
+    stopMethod: Optional[intermediateFormat.MethodCall] = None
+
+    for child in elem:
+        tag = utility.removeNameSpace(child.tag)
+        if tag == "Terminal":
+            direction, wire = getSequenceTerminalInfo(child)
+            if direction == "in":
+                seqIn = wire
+            else:
+                seqOut = wire
+        elif tag == "ConfigurableWhileLoop.BuiltInMethod":
+            if child.attrib["CallType"] == "LoopIndex":
+                indexMethod = methodCall(child[0])
+            else:
+                stopMethod = methodCall(child[0])
+        else:
+            childBlocks.append(translateElementToIRForm(child))
+
+    loop = intermediateFormat.WhileLoop(indexMethod, stopMethod, childBlocks)
+    return intermediateFormat.SequenceBlock(seqIn, seqOut, loop)
+
+
+def configureableMethodTerminal(
+    elem: ConfigurableMethodTerminal,
+) -> Union[intermediateFormat.Argument, intermediateFormat.Output]:
+
     terminal = elem[0]
     name = terminal.attrib["Id"]
     dataType = terminal.attrib["DataType"]
@@ -27,12 +75,12 @@ def configureableMethodTerminal(elem):
             )
 
 
-def methodCall(elem: MethodCall):
+def methodCall(elem: MethodCall) -> intermediateFormat.MethodCall:
 
     functionName = elem.attrib["Target"]
 
-    seqInputWire = ""
-    seqOutputWire = ""
+    seqInputWire = None
+    seqOutputWire = None
     arguments = []
     outputs = []
     for IO in elem:
@@ -43,10 +91,13 @@ def methodCall(elem: MethodCall):
             else:  # is output
                 outputs.append(configureableMethodTerminal(IO))
         elif tag == "Terminal":
+            wire = None
+            if "Wire" in IO.attrib:
+                wire = IO.attrib["Wire"]
             if IO.attrib["Id"] == "SequenceIn":
-                seqInputWire = IO.attrib["Id"]
+                seqInputWire = wire
             elif IO.attrib["Id"] == "SequenceOut":
-                seqInputWire = IO.attrib["Id"]
+                seqInputWire = wire
             else:
                 raise NotImplementedError(
                     "Encountered Unexpected Bare terminal in method call"
@@ -59,17 +110,13 @@ def methodCall(elem: MethodCall):
     return intermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
 
 
-def handleElement(elem):
-    tag = utility.removeNameSpace(elem.tag)
-
-    if tag == "ConfigurableMethodCall":
-        return methodCall(elem)
-    elif tag == "ConfigurableWhileLoop":
-        return whileLoop(elem)
-    elif tag == "ConfigurableMethodTerminal":
-        return ""
-    elif tag == "Terminal":
-        return ""
-    else:
-        return tag
+def translateElementToIRForm(elem):
+    tagToIRFunc = {
+        "ConfigurableMethodCall": methodCall,
+        "ConfigurableWhileLoop": whileLoop,
+        "Terminal": lambda x: "Terminal??",
+        "ConfigurableWhileLoop.BuiltInMethod": lambda x: "whileMethod???",
+        "Wire": lambda x: "Wire??",
+    }
+    return tagToIRFunc[utility.removeNameSpace(elem.tag)](elem)
 
