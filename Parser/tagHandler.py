@@ -1,6 +1,6 @@
-import utility
-from instructionTypes import *
-import intermediateFormat
+from Utility.types import *
+from Utility import utility as utility
+import IntermediateFormat
 from typing import Tuple, List, Optional, Union
 
 
@@ -21,14 +21,14 @@ def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, Optional[str]]:
         )
 
 
-def whileLoop(elem: WhileLoop) -> intermediateFormat.SequenceBlock:
-    childBlocks: List[intermediateFormat.SequenceBlock] = []
+def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
+    childBlocks: List[IntermediateFormat.SequenceBlock] = []
     seqIn: Optional[str] = None
     seqOut: Optional[str] = None
 
     # this could be changed to a special representation, not sure - TODO
-    indexMethod: Optional[intermediateFormat.SequenceBlock] = None
-    stopMethod: Optional[intermediateFormat.SequenceBlock] = None
+    indexMethod: Optional[IntermediateFormat.SequenceBlock] = None
+    stopMethod: Optional[IntermediateFormat.SequenceBlock] = None
 
     for child in elem:
         tag = utility.removeNameSpace(child.tag)
@@ -46,34 +46,34 @@ def whileLoop(elem: WhileLoop) -> intermediateFormat.SequenceBlock:
         else:
             childBlocks.append(translateElementToIRForm(child))
 
-    loop = intermediateFormat.WhileLoop(indexMethod, stopMethod, childBlocks)
-    return intermediateFormat.SequenceBlock(seqIn, seqOut, loop)
+    loop = IntermediateFormat.WhileLoop(indexMethod, stopMethod, childBlocks)
+    return IntermediateFormat.SequenceBlock(seqIn, seqOut, loop)
 
 
 def configureableMethodTerminal(
     elem: ConfigurableMethodTerminal,
-) -> Union[intermediateFormat.Argument, intermediateFormat.Output]:
+) -> Union[IntermediateFormat.Argument, IntermediateFormat.Output]:
 
     terminal = elem[0]
     name = terminal.attrib["Id"]
     dataType = terminal.attrib["DataType"]
     if terminal.attrib["Direction"] == "Output":
         if "Wire" in terminal.attrib:
-            return intermediateFormat.Output(name, dataType, terminal.attrib["Wire"])
+            return IntermediateFormat.Output(name, dataType, terminal.attrib["Wire"])
         else:
-            return intermediateFormat.Output(name, dataType, None)
+            return IntermediateFormat.Output(name, dataType, None)
     else:
         if "Wire" in terminal.attrib:
-            return intermediateFormat.Argument(
+            return IntermediateFormat.Argument(
                 name, dataType, variableName=terminal.attrib["Wire"]
             )
         else:
-            return intermediateFormat.Argument(
+            return IntermediateFormat.Argument(
                 name, dataType, constValue=elem.attrib["ConfiguredValue"]
             )
 
 
-def methodCall(elem: MethodCall) -> intermediateFormat.SequenceBlock:
+def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
 
     functionName = elem.attrib["Target"]
 
@@ -103,9 +103,9 @@ def methodCall(elem: MethodCall) -> intermediateFormat.SequenceBlock:
         else:
             raise NotImplementedError("Unexpected tag in method call")
 
-    method = intermediateFormat.MethodCall(functionName, arguments, outputs)
+    method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
 
-    return intermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
+    return IntermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
 
 
 def translateElementToIRForm(elem):
