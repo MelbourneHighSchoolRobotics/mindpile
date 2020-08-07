@@ -47,7 +47,7 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
             childBlocks.append(translateElementToIRForm(child))
 
     loop = IntermediateFormat.WhileLoop(indexMethod, stopMethod, childBlocks)
-    return IntermediateFormat.SequenceBlock(seqIn, seqOut, loop)
+    return IntermediateFormat.SequenceBlock(elem.attrib["Id"], seqIn, seqOut, loop)
 
 
 def configureableMethodTerminal(
@@ -99,13 +99,15 @@ def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
 
     method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
 
-    return IntermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
+    return IntermediateFormat.SequenceBlock(
+        elem.attrib["Id"], seqInputWire, seqOutputWire, method
+    )
 
 
 # THIS IS HARDCODED - unsure if this will prove problematic
 def startBlock(elem):
     outputWire = elem[1].attrib["Wire"]  # this is the terminal output
-    return IntermediateFormat.SequenceBlock(None, outputWire, None)
+    return IntermediateFormat.SequenceBlock(elem.attrib["Id"], None, outputWire, None)
 
 
 def blockDiagram(elem):
@@ -114,12 +116,19 @@ def blockDiagram(elem):
     )
 
 
+def configurableFlatCaseStructure(elem):
+    pass
+
+
 def translateElementToIRForm(elem):
     tagToIRFunc = {
         "ConfigurableMethodCall": methodCall,
         "ConfigurableWhileLoop": whileLoop,
         "StartBlock": startBlock,
         "BlockDiagram": blockDiagram,
+        "ConfigurableWaitFor": methodCall,
+        "PairedConfigurableMethodCall": methodCall,  # TODO check this
+        "ConfigurableFlatCaseStructure": lambda x: elem.tag,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
         "Wire": lambda x: "",

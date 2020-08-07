@@ -77,37 +77,39 @@ class WhileLoop:
         self.blocks = blocks
 
     def __repr__(self):
-        whileString = """Break if:
-        {stopMethod}
-        Index:
-        {indexMethod}
-        and do:{blocks}
-        """.format(
+        whileString = """Break if:\n{stopMethod}\nIndex:\n{indexMethod}\nand do:\n{blocks}""".format(
             stopMethod=Utility.utility.addSpacing(4, repr(self.stopMethod)),
             indexMethod=Utility.utility.addSpacing(4, repr(self.indexMethod)),
             blocks=Utility.utility.addSpacing(
                 4, "\n".join([repr(command) for command in self.blocks])
             ),
         )
-        return """While True:
-        {whileString}""".format(
+        return """While True:\n{whileString}""".format(
             whileString=Utility.utility.addSpacing(4, whileString)
         )
 
-
+#THIS IS NOT DONE, DO NOT USE
+class SwitchCase:
+    def __init__(self,id,dataType,pairedMethodId,actions,inputWire,outputWire)
+        self.id = id
+        self.dataType = dataType
+        self.pairedMethodId = pairedMethodId
+    def __repr__(self):
+        pass
 class SequenceBlock:
     """
     Interemediate representation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
     """
 
-    def __init__(self, inputWire, outputWire, logic):
+    def __init__(self, id, inputWire, outputWire, logic):
         self.inputWire = inputWire
         self.outputWire = outputWire
         self.logic = logic
+        self.id = id
 
     def __repr__(self):
-        return """Block | In: {input}, Out: {output}:
-        {logic}""".format(
+        return """Block id:{id}| In: {input}, Out: {output}:\n{logic}""".format(
+            id=self.id,
             input=self.inputWire,
             output=self.outputWire,
             logic=Utility.utility.addSpacing(4, repr(self.logic)),
