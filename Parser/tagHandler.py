@@ -102,14 +102,24 @@ def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
     return IntermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
 
 
+# THIS IS HARDCODED - unsure if this will prove problematic
 def startBlock(elem):
-    pass
+    outputWire = elem[1].attrib["Wire"]  # this is the terminal output
+    return IntermediateFormat.SequenceBlock(None, outputWire, None)
+
+
+def blockDiagram(elem):
+    return IntermediateFormat.BlockDiagram(
+        elem.attrib["Name"], [translateElementToIRForm(child) for child in elem]
+    )
 
 
 def translateElementToIRForm(elem):
     tagToIRFunc = {
         "ConfigurableMethodCall": methodCall,
         "ConfigurableWhileLoop": whileLoop,
+        "StartBlock": startBlock,
+        "BlockDiagram": blockDiagram,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "whileMethod???",
         "Wire": lambda x: "Wire??",

@@ -24,7 +24,7 @@ class Argument:
         self.variableName = variableName
 
     def __repr__(self):
-        return "arg::{name}:{value}".format(
+        return "{name}={value}".format(
             name=self.name,
             value=self.variableName if self.variableName != None else self.constValue,
         )
@@ -40,8 +40,8 @@ class Output:
         self.type = type
         self.variableName = variableName
 
-    def __repr(self):
-        return "Out::{variableName} = {name}".format(
+    def __repr__(self):
+        return "{variableName} = {name}".format(
             variableName=self.variableName, name=self.name
         )
 
@@ -57,8 +57,10 @@ class MethodCall:
         self.outputs = outputs
 
     def __repr__(self):
-        return "method::{name}({arguments}) -> {outputs}".format(
-            name=self.name, arguments=self.arguments, outputs=self.outputs
+        return "{name}({arguments}) -> {outputs}".format(
+            name=self.name.split("\\")[0],
+            arguments=",".join([repr(arg) for arg in self.arguments]),
+            outputs=self.outputs,
         )
 
 
@@ -76,8 +78,9 @@ class WhileLoop:
 
     def __repr__(self):
         return """
-        While:: not stop: {stopMethod} \n
-            index:{indexMethod} \n
+        While True:
+            Break if: {stopMethod}
+            Index:{indexMethod} \n
             and do: {blocks}\
         """.format(
             stopMethod=self.stopMethod, indexMethod=self.indexMethod, blocks=self.blocks
@@ -101,5 +104,23 @@ class SequenceBlock:
             input=self.inputWire,
             output=self.outputWire,
             logic=Utility.utility.addSpacing(4, repr(self.logic)),
+        )
+
+
+class BlockDiagram:
+    """
+    Container of a whole segment of code
+    """
+
+    def __init__(self, name, logic: List[SequenceBlock]):
+        self.name = name
+        self.logic = logic
+
+    def __repr__(self):
+        return "Start code block {name}:\n{code}".format(
+            name=self.name,
+            code=Utility.utility.addSpacing(
+                4, "\n".join([repr(command) for command in self.logic])
+            ),
         )
 
