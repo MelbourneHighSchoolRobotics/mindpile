@@ -121,8 +121,8 @@ def translateElementToIRForm(elem):
         "StartBlock": startBlock,
         "BlockDiagram": blockDiagram,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
-        "ConfigurableWhileLoop.BuiltInMethod": lambda x: "whileMethod???",
-        "Wire": lambda x: "Wire??",
+        "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
+        "Wire": lambda x: "",
     }
     return tagToIRFunc[utility.removeNameSpace(elem.tag)](elem)
 

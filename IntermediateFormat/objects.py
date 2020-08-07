@@ -77,13 +77,21 @@ class WhileLoop:
         self.blocks = blocks
 
     def __repr__(self):
-        return """
-        While True:
-            Break if: {stopMethod}
-            Index:{indexMethod} \n
-            and do: {blocks}\
+        whileString = """Break if:
+        {stopMethod}
+        Index:
+        {indexMethod}
+        and do:{blocks}
         """.format(
-            stopMethod=self.stopMethod, indexMethod=self.indexMethod, blocks=self.blocks
+            stopMethod=Utility.utility.addSpacing(4, repr(self.stopMethod)),
+            indexMethod=Utility.utility.addSpacing(4, repr(self.indexMethod)),
+            blocks=Utility.utility.addSpacing(
+                4, "\n".join([repr(command) for command in self.blocks])
+            ),
+        )
+        return """While True:
+        {whileString}""".format(
+            whileString=Utility.utility.addSpacing(4, whileString)
         )
 
 
@@ -99,8 +107,7 @@ class SequenceBlock:
 
     def __repr__(self):
         return """Block | In: {input}, Out: {output}:
-            {logic}
-            """.format(
+        {logic}""".format(
             input=self.inputWire,
             output=self.outputWire,
             logic=Utility.utility.addSpacing(4, repr(self.logic)),
