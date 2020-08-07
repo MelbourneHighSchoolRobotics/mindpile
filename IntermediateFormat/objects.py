@@ -1,4 +1,5 @@
 from typing import List, Optional
+import Utility
 
 # ------------- Methods --------------------------#
 
@@ -94,10 +95,11 @@ class SequenceBlock:
         self.logic = logic
 
     def __repr__(self):
-        return """
-                Block | In: {input}, Out: {output}  [
-                \n    {logic}
-                \n ]
+        return """Block | In: {input}, Out: {output}:
+            {logic}
             """.format(
-            input=self.inputWire, output=self.outputWire, logic=self.logic
+            input=self.inputWire,
+            output=self.outputWire,
+            logic=Utility.utility.addSpacing(4, repr(self.logic)),
         )
+

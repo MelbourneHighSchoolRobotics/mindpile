@@ -9,5 +9,5 @@ xmlstr = ET.tostring(root, encoding="utf8", method="xml")
 for elem in root.iter(utility.addNameSpace("BlockDiagram")):
     root = elem
 
-print(root[0])
+# print(root[0])
 print(Parser.tagHandler.translateElementToIRForm(root[1]))

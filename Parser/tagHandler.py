@@ -12,9 +12,9 @@ def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, Optional[str]]:
     if "Wire" in elem.attrib:
         wire = elem.attrib["Wire"]
     if elem.attrib["Id"] == "SequenceIn":
-        return "out", wire
-    elif elem.attrib["Id"] == "SequenceOut":
         return "in", wire
+    elif elem.attrib["Id"] == "SequenceOut":
+        return "out", wire
     else:
         raise NotImplementedError(
             "Encountered Unexpected Bare terminal in method call", elem
@@ -89,23 +89,21 @@ def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
             else:  # is output
                 outputs.append(configureableMethodTerminal(IO))
         elif tag == "Terminal":
-            wire = None
-            if "Wire" in IO.attrib:
-                wire = IO.attrib["Wire"]
-            if IO.attrib["Id"] == "SequenceIn":
-                seqInputWire = wire
-            elif IO.attrib["Id"] == "SequenceOut":
+            dir, wire = getSequenceTerminalInfo(IO)
+            if dir == "in":
                 seqInputWire = wire
             else:
-                raise NotImplementedError(
-                    "Encountered Unexpected Bare terminal in method call"
-                )
+                seqOutputWire = wire
         else:
             raise NotImplementedError("Unexpected tag in method call")
 
     method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
 
     return IntermediateFormat.SequenceBlock(seqInputWire, seqOutputWire, method)
+
+
+def startBlock(elem):
+    pass
 
 
 def translateElementToIRForm(elem):
