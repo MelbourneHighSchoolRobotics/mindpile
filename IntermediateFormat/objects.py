@@ -71,6 +71,10 @@ class BreakMethodCall(MethodCall):
     def __init__(self, name, arguments, outputs):
         super().__init__(name, arguments, outputs)
 
+    def __str__(self):
+        args = ",".join([str(arg) for arg in self.arguments])
+        return f"if {self.name}({args}) -> {self.outputs}:\n    break"
+
 
 # ------------------------- end method parts ------------------
 # TODO figure out all the possibilities for while loop configs
