@@ -6,7 +6,7 @@ import Utility
 
 class Argument:
     """
-    Intermediate representation of arugments to method calls
+    Intermediate stresentation of arugments to method calls
     """
 
     def __init__(
@@ -23,7 +23,7 @@ class Argument:
         self.constValue = constValue
         self.variableName = variableName
 
-    def __repr__(self):
+    def __str__(self):
         return "{name}={value}".format(
             name=self.name,
             value=self.variableName if self.variableName != None else self.constValue,
@@ -32,7 +32,7 @@ class Argument:
 
 class Output:
     """
-    Intermediate representation of Outputs from method calls, and the variables (wires) they are assigned to
+    Intermediate stresentation of Outputs from method calls, and the variables (wires) they are assigned to
     """
 
     def __init__(self, name: str, type: str, variableName: str):
@@ -40,7 +40,7 @@ class Output:
         self.type = type
         self.variableName = variableName
 
-    def __repr__(self):
+    def __str__(self):
         return "{variableName} = {name}".format(
             variableName=self.variableName, name=self.name
         )
@@ -48,7 +48,7 @@ class Output:
 
 class MethodCall:
     """
-    Intermediate representation of the methods that are called. This is the vast majority of mindstorms blocks - sensors, motors
+    Intermediate stresentation of the methods that are called. This is the vast majority of mindstorms blocks - sensors, motors
     """
 
     def __init__(self, name: str, arguments: List[Argument], outputs: List[Output]):
@@ -56,10 +56,10 @@ class MethodCall:
         self.arguments = arguments
         self.outputs = outputs
 
-    def __repr__(self):
+    def __str__(self):
         return "{name}({arguments}) -> {outputs}".format(
             name=self.name.split("\\")[0],
-            arguments=",".join([repr(arg) for arg in self.arguments]),
+            arguments=",".join([str(arg) for arg in self.arguments]),
             outputs=self.outputs,
         )
 
@@ -68,7 +68,7 @@ class MethodCall:
 # TODO figure out all the possibilities for while loop configs
 class WhileLoop:
     """
-    Intermediate represntation of the special while loop
+    Intermediate stresntation of the special while loop
     """
 
     def __init__(self, indexMethod, stopMethod, blocks):
@@ -76,29 +76,33 @@ class WhileLoop:
         self.stopMethod = stopMethod
         self.blocks = blocks
 
-    def __repr__(self):
+    def __str__(self):
         whileString = """Break if:\n{stopMethod}\nIndex:\n{indexMethod}\nand do:\n{blocks}""".format(
-            stopMethod=Utility.utility.addSpacing(4, repr(self.stopMethod)),
-            indexMethod=Utility.utility.addSpacing(4, repr(self.indexMethod)),
+            stopMethod=Utility.utility.addSpacing(4, str(self.stopMethod)),
+            indexMethod=Utility.utility.addSpacing(4, str(self.indexMethod)),
             blocks=Utility.utility.addSpacing(
-                4, "\n".join([repr(command) for command in self.blocks])
+                4, "\n".join([str(command) for command in self.blocks])
             ),
         )
         return """While True:\n{whileString}""".format(
             whileString=Utility.utility.addSpacing(4, whileString)
         )
 
-#THIS IS NOT DONE, DO NOT USE
+
+# THIS IS NOT DONE, DO NOT USE
 class SwitchCase:
-    def __init__(self,id,dataType,pairedMethodId,actions,inputWire,outputWire)
+    def __init__(self, id, dataType, pairedMethodId, actions, inputWire, outputWire):
         self.id = id
         self.dataType = dataType
         self.pairedMethodId = pairedMethodId
-    def __repr__(self):
+
+    def __str__(self):
         pass
+
+
 class SequenceBlock:
     """
-    Interemediate representation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
+    Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
     """
 
     def __init__(self, id, inputWire, outputWire, logic):
@@ -107,12 +111,12 @@ class SequenceBlock:
         self.logic = logic
         self.id = id
 
-    def __repr__(self):
+    def __str__(self):
         return """Block id:{id}| In: {input}, Out: {output}:\n{logic}""".format(
             id=self.id,
             input=self.inputWire,
             output=self.outputWire,
-            logic=Utility.utility.addSpacing(4, repr(self.logic)),
+            logic=Utility.utility.addSpacing(4, str(self.logic)),
         )
 
 
@@ -125,11 +129,11 @@ class BlockDiagram:
         self.name = name
         self.logic = logic
 
-    def __repr__(self):
+    def __str__(self):
         return "Start code block {name}:\n{code}".format(
             name=self.name,
             code=Utility.utility.addSpacing(
-                4, "\n".join([repr(command) for command in self.logic])
+                4, "\n".join([str(command) for command in self.logic])
             ),
         )
 
