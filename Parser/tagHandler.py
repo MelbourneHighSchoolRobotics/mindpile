@@ -26,10 +26,6 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
     seqIn: Optional[str] = None
     seqOut: Optional[str] = None
 
-    # this could be changed to a special representation, not sure - TODO
-    indexMethod: Optional[IntermediateFormat.SequenceBlock] = None
-    stopMethod: Optional[IntermediateFormat.SequenceBlock] = None
-
     for child in elem:
         tag = utility.removeNameSpace(child.tag)
         if tag == "Terminal":
@@ -40,13 +36,15 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
                 seqOut = wire
         elif tag == "ConfigurableWhileLoop.BuiltInMethod":
             if child.attrib["CallType"] == "LoopIndex":
-                indexMethod = methodCall(child[0])
+                childBlocks.append(methodCall(child[0]))
             else:
-                stopMethod = methodCall(child[0])
+                childBlocks.append(
+                    methodCall(child[0], isBreakMethod=True)
+                )  # normally we can just use the generic translater, but here we want to make sure the break method is known to be a break method, so we bypass that to pass the flag
         else:
             childBlocks.append(translateElementToIRForm(child))
 
-    loop = IntermediateFormat.WhileLoop(indexMethod, stopMethod, childBlocks)
+    loop = IntermediateFormat.WhileLoop(childBlocks)
     return IntermediateFormat.SequenceBlock(elem.attrib["Id"], seqIn, seqOut, loop)
 
 
@@ -73,7 +71,9 @@ def configureableMethodTerminal(
             )
 
 
-def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
+def methodCall(
+    elem: MethodCall, isBreakMethod=False
+) -> IntermediateFormat.SequenceBlock:
 
     functionName = elem.attrib["Target"]
 
@@ -96,8 +96,10 @@ def methodCall(elem: MethodCall) -> IntermediateFormat.SequenceBlock:
                 seqOutputWire = wire
         else:
             raise NotImplementedError("Unexpected tag in method call")
-
-    method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
+    if isBreakMethod:
+        method = IntermediateFormat.BreakMethodCall(functionName, arguments, outputs)
+    else:
+        method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
 
     return IntermediateFormat.SequenceBlock(
         elem.attrib["Id"], seqInputWire, seqOutputWire, method

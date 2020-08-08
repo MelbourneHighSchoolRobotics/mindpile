@@ -67,6 +67,11 @@ class MethodCall:
         )
 
 
+class BreakMethodCall(MethodCall):
+    def __init__(self, name, arguments, outputs):
+        super().__init__(name, arguments, outputs)
+
+
 # ------------------------- end method parts ------------------
 # TODO figure out all the possibilities for while loop configs
 class WhileLoop:
@@ -74,15 +79,11 @@ class WhileLoop:
     Intermediate stresntation of the special while loop
     """
 
-    def __init__(self, indexMethod, stopMethod, blocks):
-        self.indexMethod = indexMethod
-        self.stopMethod = stopMethod
+    def __init__(self, blocks):
         self.blocks = blocks
 
     def __str__(self):
-        whileString = """Break if:\n{stopMethod}\nIndex:\n{indexMethod}\nand do:\n{blocks}""".format(
-            stopMethod=Utility.utility.addSpacing(4, str(self.stopMethod)),
-            indexMethod=Utility.utility.addSpacing(4, str(self.indexMethod)),
+        whileString = """do:\n{blocks}""".format(
             blocks=Utility.utility.addSpacing(
                 4, "\n".join([str(command) for command in self.blocks])
             ),
