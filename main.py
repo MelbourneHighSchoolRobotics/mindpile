@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 import Utility.utility as utility
 import Parser
-import IntermediateFormat.flow
 
 tree = ET.parse("TestInputs\/interrupt.ev3p")
 root = tree.getroot()
