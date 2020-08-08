@@ -45,6 +45,9 @@ class Output:
             variableName=self.variableName, name=self.name
         )
 
+    def __repr__(self):
+        return f"<Output({self.name},{self.type},{self.variableName})>"
+
 
 class MethodCall:
     """
