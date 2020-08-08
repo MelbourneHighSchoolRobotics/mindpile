@@ -131,7 +131,9 @@ def translateElementToIRForm(elem):
         "ConfigurableFlatCaseStructure": lambda x: elem.tag,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
-        "Wire": lambda x: "",
+        "Wire": lambda x: IntermediateFormat.SequenceBlock(
+            "DEBUG NOT USED", "DEBUG NOT USED", "DEBUG DONT USE", None
+        ),
     }
     return tagToIRFunc[utility.removeNameSpace(elem.tag)](elem)
 
