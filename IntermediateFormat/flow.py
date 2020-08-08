@@ -12,6 +12,6 @@ def flowResolver(blocks: List[objects.SequenceBlock]) -> List[objects.SequenceBl
     while True:
         sortedBlocks.append(currBlock)
         currBlock = inWireToBlock[currBlock.outputWire]
-        if currBlock.outputWire != None:
+        if currBlock.outputWire == None:
             break
     return sortedBlocks
