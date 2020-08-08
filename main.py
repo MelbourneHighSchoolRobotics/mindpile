@@ -3,7 +3,7 @@ import Utility.utility as utility
 import Parser
 import IntermediateFormat.flow
 
-tree = ET.parse("TestInputs\/morecomplex.ev3p")
+tree = ET.parse("TestInputs\/interrupt.ev3p")
 root = tree.getroot()
 xmlstr = ET.tostring(root, encoding="utf8", method="xml")
 
@@ -15,7 +15,9 @@ for elem in root.iter(utility.addNameSpace("BlockDiagram")):
 codeBlock = Parser.tagHandler.translateElementToIRForm(root)
 
 
-print(((codeBlock.logic)))
 print("-----")
-print((IntermediateFormat.flow.flowResolver(codeBlock.logic)))
+
+inloop = IntermediateFormat.flow.flowResolver(codeBlock.children[1].logic.children)
+
+print("\n".join([str(block) for block in inloop]))
 

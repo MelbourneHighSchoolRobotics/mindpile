@@ -1,5 +1,20 @@
 from typing import List, Optional
 import Utility
+from abc import ABC, abstractmethod
+
+# ----------------Metaclasses/interfaces-----------#
+
+
+class MultiBlockContainer(ABC):
+    @abstractmethod
+    def sortInternalFlow(self):
+        pass
+
+    @property
+    @abstractmethod
+    def children(self):
+        pass
+
 
 # ------------- Methods --------------------------#
 
@@ -78,23 +93,30 @@ class BreakMethodCall(MethodCall):
 
 # ------------------------- end method parts ------------------
 # TODO figure out all the possibilities for while loop configs
-class WhileLoop:
+class WhileLoop(MultiBlockContainer):
     """
     Intermediate stresntation of the special while loop
     """
 
-    def __init__(self, blocks):
-        self.blocks = blocks
+    def __init__(self, childInstructions):
+        self._childInstructions = childInstructions
 
     def __str__(self):
         whileString = """do:\n{blocks}""".format(
             blocks=Utility.utility.addSpacing(
-                4, "\n".join([str(command) for command in self.blocks])
+                4, "\n".join([str(command) for command in self._childInstructions])
             ),
         )
         return """While True:\n{whileString}""".format(
             whileString=Utility.utility.addSpacing(4, whileString)
         )
+
+    def sortInternalFlow(self):
+        pass
+
+    @property
+    def children(self):
+        return self._childInstructions
 
 
 # THIS IS NOT DONE, DO NOT USE
@@ -131,20 +153,26 @@ class SequenceBlock:
         return f"<SequenceBlock({self.id},{self.inputWire},{self.outputWire},{self.logic})>"
 
 
-class BlockDiagram:
+class BlockDiagram(MultiBlockContainer):
     """
     Container of a whole segment of code
     """
 
-    def __init__(self, name, logic: List[SequenceBlock]):
+    def __init__(self, name, childInstructions: List[SequenceBlock]):
         self.name = name
-        self.logic = logic
+        self._childInstructions = childInstructions
 
     def __str__(self):
         return "Start code block {name}:\n{code}".format(
             name=self.name,
             code=Utility.utility.addSpacing(
-                4, "\n".join([str(command) for command in self.logic])
+                4, "\n".join([str(command) for command in self._childInstructions])
             ),
         )
 
+    def sortInternalFlow(self):
+        pass
+
+    @property
+    def children(self):
+        return self._childInstructions
