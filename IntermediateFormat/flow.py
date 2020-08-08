@@ -1,8 +1,7 @@
-import IntermediateFormat.objects as objects
 from typing import List
 
 
-def flowResolver(blocks: List[objects.SequenceBlock]) -> List[objects.SequenceBlock]:
+def flowResolver(blocks):
     inWireToBlock = {}
     for block in blocks:
         inWireToBlock[block.inputWire] = block
