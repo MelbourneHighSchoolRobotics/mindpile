@@ -1,18 +1,45 @@
 from typing import List, Optional
 import Utility
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+import copy
 
 # ----------------Metaclasses/interfaces-----------#
 
 
-class MultiBlockContainer(ABC):
-    @abstractmethod
+class MultiBlockContainer:
     def sortInternalFlow(self):
-        pass
+
+        # This function propogates changes down the tree in an extremely mutable way. I'm not sure if this is the best way to do this, or if I should just make deep copy of the tree.
+        # I'm leaving it like this as a V1 type thing, but it might cause issues down the track.
+        inWireToBlock = {}
+        for childBlock in self.children:
+            inWireToBlock[childBlock.inputWire] = childBlock
+        sortedBlocks = []
+        currBlock = inWireToBlock[None]
+        sortedBlocks.append(currBlock)
+        if isinstance(
+            childBlock.logic, MultiBlockContainer
+        ):  # dislike the code reuse here, it's fine though
+            childBlock.logic.sortInternalFlow()
+        while True:
+            currBlock = inWireToBlock[currBlock.outputWire]
+            if isinstance(
+                currBlock.logic, MultiBlockContainer
+            ):  # propogate the sorting down the tree
+                currBlock.logic.sortInternalFlow()
+            sortedBlocks.append(currBlock)
+            if currBlock.outputWire == None:
+                break
+        self.children = sortedBlocks
 
     @property
     @abstractmethod
     def children(self):
+        pass
+
+    @children.setter
+    @abstractmethod
+    def children(self, value):
         pass
 
 
@@ -40,7 +67,7 @@ class Argument:
 
     def __str__(self):
         return "{name}={value}".format(
-            name=self.name,
+            name=self.name.replace("\\ ", "_"),
             value=self.variableName if self.variableName != None else self.constValue,
         )
 
@@ -76,7 +103,7 @@ class MethodCall:
 
     def __str__(self):
         return "{name}({arguments}) -> {outputs}".format(
-            name=self.name.split("\\")[0],
+            name=self.name.split("\\.vix")[0],
             arguments=",".join([str(arg) for arg in self.arguments]),
             outputs=self.outputs,
         )
@@ -99,24 +126,26 @@ class WhileLoop(MultiBlockContainer):
     """
 
     def __init__(self, childInstructions):
+        super().__init__()
         self._childInstructions = childInstructions
 
     def __str__(self):
-        whileString = """do:\n{blocks}""".format(
+        whileString = """{blocks}""".format(
             blocks=Utility.utility.addSpacing(
-                4, "\n".join([str(command) for command in self._childInstructions])
+                0, "\n".join([str(command) for command in self._childInstructions])
             ),
         )
         return """While True:\n{whileString}""".format(
             whileString=Utility.utility.addSpacing(4, whileString)
         )
 
-    def sortInternalFlow(self):
-        pass
-
     @property
     def children(self):
         return self._childInstructions
+
+    @children.setter
+    def children(self, value):
+        self._childInstructions = value
 
 
 # THIS IS NOT DONE, DO NOT USE
@@ -142,12 +171,16 @@ class SequenceBlock:
         self.id = id
 
     def __str__(self):
+        return self.__minRep__()
         return """Block id:{id}| In: {input}, Out: {output}:\n{logic}""".format(
             id=self.id,
             input=self.inputWire,
             output=self.outputWire,
             logic=Utility.utility.addSpacing(4, str(self.logic)),
         )
+
+    def __minRep__(self):
+        return f"{self.logic}"
 
     def __repr__(self):
         return f"<SequenceBlock({self.id},{self.inputWire},{self.outputWire},{self.logic})>"
@@ -159,6 +192,7 @@ class BlockDiagram(MultiBlockContainer):
     """
 
     def __init__(self, name, childInstructions: List[SequenceBlock]):
+        super().__init__()
         self.name = name
         self._childInstructions = childInstructions
 
@@ -170,9 +204,10 @@ class BlockDiagram(MultiBlockContainer):
             ),
         )
 
-    def sortInternalFlow(self):
-        pass
-
     @property
     def children(self):
         return self._childInstructions
+
+    @children.setter
+    def children(self, value):
+        self._childInstructions = value
