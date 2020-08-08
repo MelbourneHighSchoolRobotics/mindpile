@@ -119,6 +119,9 @@ class SequenceBlock:
             logic=Utility.utility.addSpacing(4, str(self.logic)),
         )
 
+    def __repr__(self):
+        return f"<SequenceBlock({self.id},{self.inputWire},{self.outputWire},{self.logic})>"
+
 
 class BlockDiagram:
     """
