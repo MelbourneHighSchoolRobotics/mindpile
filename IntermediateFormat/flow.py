@@ -9,9 +9,10 @@ def flowResolver(blocks: List[objects.SequenceBlock]) -> List[objects.SequenceBl
 
     sortedBlocks = []
     currBlock = inWireToBlock[None]  # starting block has in=None
+    sortedBlocks.append(currBlock)
     while True:
-        sortedBlocks.append(currBlock)
         currBlock = inWireToBlock[currBlock.outputWire]
+        sortedBlocks.append(currBlock)
         if currBlock.outputWire == None:
             break
     return sortedBlocks
