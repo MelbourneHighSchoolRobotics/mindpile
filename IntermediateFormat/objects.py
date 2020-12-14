@@ -149,16 +149,30 @@ class WhileLoop(MultiBlockContainer):
 
 
 # THIS IS NOT DONE, DO NOT USE
+"""
+class Case:
+    def __init(self,id,pattern,children):
+        self.id = id
+        self.pattern = pattern
+        self.children = children
+
 class SwitchCase:
-    def __init__(self, id, dataType, pairedMethodId, actions, inputWire, outputWire):
+    def __init__(self, id, dataType:str, pairedMethodId:str, inputWire:str, outputWire:str,cases:List[Case]):
         self.id = id
         self.dataType = dataType
         self.pairedMethodId = pairedMethodId
-
+        self.cases = cases
     def __str__(self):
         pass
+"""
 
 
+class PairedMethodCall:
+    def __init__(self,method:MethodCall,nextId:str):
+        self.method = method
+        self.nextId = nextId
+    def __str__(self):
+        return f"if({self.method}) -> switch: ({self.nextId})"
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept

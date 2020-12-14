@@ -105,7 +105,6 @@ def methodCall(
         elem.attrib["Id"], seqInputWire, seqOutputWire, method
     )
 
-
 # THIS IS HARDCODED - unsure if this will prove problematic
 def startBlock(elem):
     outputWire = elem[1].attrib["Wire"]  # this is the terminal output
@@ -117,9 +116,33 @@ def blockDiagram(elem):
         elem.attrib["Name"], [translateElementToIRForm(child) for child in elem]
     )
 
-
+"""
 def configurableFlatCaseStructure(elem):
-    pass
+    outputWire = elem[1].attrib["Wire"]  # this is the terminal output
+    cases = []
+    tag = utility.removeNameSpace(child.tag)
+    return IntermediateFormat.SwitchCase(
+        elem.attrib["Id"],
+        elem.attrib["DataType"],
+        elem.attrib["PairedMethodId"],
+        elem.attrib["InputWire"],
+        elem.attrib["OutputWire"],
+        cases
+         )
+"""
+#ok
+#so basically
+#we enter the paired method
+#the value is computed
+#then we enter the switch
+#and that happens /IMPLICITLY/
+
+def pairedMethodCall(elem:PairedConfigurableMethodCall):
+    methodBlock = methodCall(elem) #reuse logic from method call, then extract data into proper sequenceblock
+    innerMethod = methodBlock.logic
+    pairedMethod = IntermediateFormat.PairedMethodCall(innerMethod,elem.attrib["PairedStructure"])
+
+    return IntermediateFormat.SequenceBlock(methodBlock.id,methodBlock.inputWire,methodBlock.outputWire,pairedMethod)
 
 
 def translateElementToIRForm(elem):
@@ -129,8 +152,8 @@ def translateElementToIRForm(elem):
         "StartBlock": startBlock,
         "BlockDiagram": blockDiagram,
         "ConfigurableWaitFor": methodCall,
-        "PairedConfigurableMethodCall": methodCall,  # TODO check this
-        "ConfigurableFlatCaseStructure": lambda x: elem.tag,
+        "PairedConfigurableMethodCall": pairedMethodCall,  # TODO check this probably needs special handling for the paired swich
+        "ConfigurableFlatCaseStructure": lambda x: "TODO TEMP",
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
         "Wire": lambda x: IntermediateFormat.SequenceBlock(
