@@ -13,7 +13,8 @@ for elem in root.iter(utility.addNameSpace("BlockDiagram")):
 
 
 codeBlock = Parser.tagHandler.translateElementToIRForm(root)
-#codeBlock.sortInternalFlow()
+
+codeBlock.sortInternalFlow()
 print(codeBlock)
 # print("\n".join([str(block) for block in inloop]))
 

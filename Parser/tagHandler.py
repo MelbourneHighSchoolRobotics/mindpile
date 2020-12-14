@@ -116,20 +116,16 @@ def blockDiagram(elem):
         elem.attrib["Name"], [translateElementToIRForm(child) for child in elem]
     )
 
-"""
+
 def configurableFlatCaseStructure(elem):
-    outputWire = elem[1].attrib["Wire"]  # this is the terminal output
     cases = []
-    tag = utility.removeNameSpace(child.tag)
     return IntermediateFormat.SwitchCase(
         elem.attrib["Id"],
         elem.attrib["DataType"],
-        elem.attrib["PairedMethodId"],
-        elem.attrib["InputWire"],
-        elem.attrib["OutputWire"],
+        elem.attrib["PairedConfigurableMethodCall"],
         cases
          )
-"""
+
 #ok
 #so basically
 #we enter the paired method
@@ -153,7 +149,7 @@ def translateElementToIRForm(elem):
         "BlockDiagram": blockDiagram,
         "ConfigurableWaitFor": methodCall,
         "PairedConfigurableMethodCall": pairedMethodCall,  # TODO check this probably needs special handling for the paired swich
-        "ConfigurableFlatCaseStructure": lambda x: "TODO TEMP",
+        "ConfigurableFlatCaseStructure": configurableFlatCaseStructure,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
         "Wire": lambda x: IntermediateFormat.SequenceBlock(

@@ -12,8 +12,27 @@ class MultiBlockContainer:
         # This function propogates changes down the tree in an extremely mutable way. I'm not sure if this is the best way to do this, or if I should just make deep copy of the tree.
         # I'm leaving it like this as a V1 type thing, but it might cause issues down the track.
         inWireToBlock = {}
+        switchPairingIds = {}
         for childBlock in self.children:
-            inWireToBlock[childBlock.inputWire] = childBlock
+            #handle paired switch cases
+        
+            #resolve paired methods, and/or add them to the dict to be matched later
+            
+            #special resolution case for switchCase, because they don't exist within sequenceBlocks
+            if isinstance(childBlock,SwitchCase):
+                if childBlock.id in switchPairingIds:
+                    pairedMethod = switchPairingIds[childBlock.id]
+                    pairedMethod.pairedSwitch = childBlock
+                else:
+                    switchPairingIds[childBlock.id] = childBlock
+            elif isinstance(childBlock.logic, PairedMethodCall):
+                if childBlock.id in switchPairingIds:
+                    switchCase = switchPairingIds[childBlock.id]
+                    childBlock.logic.pairedSwitch = switchCase
+                else:
+                    switchPairingIds[childBlock.id] = childBlock
+            if isinstance(childBlock,SequenceBlock):
+                inWireToBlock[childBlock.inputWire] = childBlock
         sortedBlocks = []
         currBlock = inWireToBlock[None]
         sortedBlocks.append(currBlock)
@@ -149,7 +168,7 @@ class WhileLoop(MultiBlockContainer):
 
 
 # THIS IS NOT DONE, DO NOT USE
-"""
+
 class Case:
     def __init(self,id,pattern,children):
         self.id = id
@@ -157,22 +176,23 @@ class Case:
         self.children = children
 
 class SwitchCase:
-    def __init__(self, id, dataType:str, pairedMethodId:str, inputWire:str, outputWire:str,cases:List[Case]):
+    def __init__(self, id, dataType:str, pairedMethodId:str, cases:List[Case]):
         self.id = id
         self.dataType = dataType
         self.pairedMethodId = pairedMethodId
         self.cases = cases
     def __str__(self):
-        pass
-"""
+        return f"Switch: TODO id:{self.id}"
+
 
 
 class PairedMethodCall:
-    def __init__(self,method:MethodCall,nextId:str):
+    def __init__(self,method:MethodCall,pairedSwitchId:str):
         self.method = method
-        self.nextId = nextId
+        self.pairedSwitchId = pairedSwitchId
+        self.pairedSwitch = None
     def __str__(self):
-        return f"if({self.method}) -> switch: ({self.nextId})"
+        return f"var = ({self.method})\nswitch({self.pairedSwitch})"
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
