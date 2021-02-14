@@ -6,4 +6,4 @@ ConfigurableMethodTerminal = NewType("ConfigurableMethodTerminal", ET.Element)
 MethodTerminal = NewType("MethodTerminal", ET.Element)
 WhileLoop = NewType("WhileLoop", ET.Element)
 Terminal = NewType("Terminal", ET.Element)
-
+PairedConfigurableMethodCall = NewType("PairedConfigurableMethodCall",ET.Element)

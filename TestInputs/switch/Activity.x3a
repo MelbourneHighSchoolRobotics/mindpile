@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SourceFile Version="1.0.2.10" xmlns="http://www.ni.com/SourceModel.xsd">
+  <Namespace Name="Project">
+    <GuidedHelp xmlns="http://www.ni.com/GuidedHelp.xsd">
+      <Slides>
+        <Slide GuidedHelpSize="SmallVertical" SlideName="" NextButtonEnabled="True" OnSlideChanged="" Signature="jQjaR3Gka8AGdJBF8iy2dZhJSd5jn11dOtOOxS/LFbOVQfV+14KnCllPSkvfRz0GdcGIg/JMVcsuZz1mjns+3g==" TemplateID="Full">
+          <SimpleData UniqueID="RichTextTitle" Version="0" UserEditable="False" WideControl="False">
+            <Text><RichTextDocument fontsize="14" fontfamily="Verdana" xmlns="http://www.ni.com/ActivityRichTextDocument.xsd"><p><font size="16"><b>Document Your Work</b></font><b></b></p></RichTextDocument></Text>
+          </SimpleData>
+          <SimpleData UniqueID="RichText" Version="0" UserEditable="False" WideControl="False">
+            <Text><RichTextDocument fontsize="12" fontfamily="Verdana" xmlns="http://www.ni.com/ActivityRichTextDocument.xsd"><p>You can add images, videos, building instructions and descriptions of your robot here. To learn more, check out the "Content Editor" Quick Start video in the lobby or read the <font color="#666666"><u><b><a action="OpenWebsite:ev3help\://editor/ContentEditor.html">help text</a></b></u></font>.</p><p> </p><p>If you want to share this project with the community, make sure to follow the guidelines. You can read them <font color="#337CBB"><u><a action="OpenWebsite:http\://LEGO.com/en-us/go/1/modguidelines">here</a></u></font>.</p></RichTextDocument></Text>
+          </SimpleData>
+          <Children />
+        </Slide>
+      </Slides>
+      <MediaDictionary />
+    </GuidedHelp>
+  </Namespace>
+</SourceFile>
