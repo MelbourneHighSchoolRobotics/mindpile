@@ -1,62 +1,73 @@
-from typing import List, Optional
+from typing import List, Optional,Union,Dict
 import Utility
 from abc import abstractmethod
 import copy
 
 # ----------------Metaclasses/interfaces-----------#
 
-
 class MultiBlockContainer:
-    def sortInternalFlow(self):
-
-        # This function propogates changes down the tree in an extremely mutable way. I'm not sure if this is the best way to do this, or if I should just make deep copy of the tree.
-        # I'm leaving it like this as a V1 type thing, but it might cause issues down the track.
-        inWireToBlock = {}
-        switchPairingIds = {}
+    #NOTE: Below is a large set of functions used to resolve flow order into something linear
+    #This could be done in two passes, but is instead done in a few
+    #this is to reduce complexity
+    def getBlockIdMapping(self)->Dict[str,Union['SequenceBlock','SwitchCase']]:
+        #get a mapping of all Ids and blocks recursively
+        #NOTE: This parses the WHOLE CALL TREE
+        idToBlock = {}
         for childBlock in self.children:
-            #handle paired switch cases
-        
-            #resolve paired methods, and/or add them to the dict to be matched later
-            
-            #special resolution case for switchCase, because they don't exist within sequenceBlocks
-            if isinstance(childBlock,SwitchCase):
-                if childBlock.id in switchPairingIds:
-                    pairedMethod = switchPairingIds[childBlock.id]
-                    pairedMethod.pairedSwitch = childBlock
-                else:
-                    switchPairingIds[childBlock.id] = childBlock
-            elif isinstance(childBlock.logic, PairedMethodCall):
-                if childBlock.id in switchPairingIds:
-                    switchCase = switchPairingIds[childBlock.id]
-                    childBlock.logic.pairedSwitch = switchCase
-                else:
-                    switchPairingIds[childBlock.id] = childBlock
+            if isinstance(childBlock,SequenceBlock) or isinstance(childBlock,SwitchCase):
+                idToBlock[childBlock.id] = childBlock
+            if(isinstance(childBlock,MultiBlockContainer)): #todo switchCases may need to be mbcontainers too
+                idToBlock = {**idToBlock, **childBlock.getBlockIdMapping()}
+        return idToBlock
+    
+    def getInWireMapping(self)->Dict[Optional[str],'SequenceBlock']:
+        #gets a dictionary of program flow/wire orders
+        # flow goes None->wX -> wX -> None
+        #NOTE: This only parses the current level, and wire ids are level scope
+        inWireToBlock = {}
+        for childBlock in self.children:
             if isinstance(childBlock,SequenceBlock):
                 inWireToBlock[childBlock.inputWire] = childBlock
-        sortedBlocks = []
-        currBlock = inWireToBlock[None]
-        sortedBlocks.append(currBlock)
-        if isinstance(
-            childBlock.logic, MultiBlockContainer
-        ):  # dislike the code reuse here, it's fine though
-            childBlock.logic.sortInternalFlow()
-        while True:
-            currBlock = inWireToBlock[currBlock.outputWire]
-            if isinstance(
-                currBlock.logic, MultiBlockContainer
-            ):  # propogate the sorting down the tree
-                currBlock.logic.sortInternalFlow()
-            sortedBlocks.append(currBlock)
-            if currBlock.outputWire == None:
-                break
-        self.children = sortedBlocks
+        return inWireToBlock
 
-    @property
+    def _resolveSwitchCases(self,idMap:Dict[str,Union['SequenceBlock','SwitchCase']]):
+        # pairs switch cases and paried methods
+        # NOTE: This operates on the current level only
+        for childBlock in self.children:
+            if(isinstance(childBlock,SequenceBlock) and isinstance(childBlock.logic,PairedMethodCall)):
+                method:PairedMethodCall = childBlock.logic
+                method.pairedSwitch = idMap[method.pairedSwitchId] #type:ignore 
+                pass
+
+
+    def _sortWireOrder(self,idMap:Dict[str,Union['SequenceBlock','SwitchCase']]):
+        inWireToBlock = self.getInWireMapping()
+        self._resolveSwitchCases(idMap)
+        sortedBlocks = []
+        startBlock = inWireToBlock[None]
+        
+        currentBlock = startBlock
+        while True:
+            if(isinstance(currentBlock.logic,MultiBlockContainer)):
+                currentBlock.logic._sortWireOrder(idMap)
+            sortedBlocks.append(currentBlock)
+
+            if currentBlock.outputWire == None: 
+                # when you've reached none, you're back to the start
+                break
+            else:
+                currentBlock = inWireToBlock[currentBlock.outputWire]
+        self.children = sortedBlocks #type: ignore
+    def sortInternalFlow(self):
+        idMap = self.getBlockIdMapping()
+        self._sortWireOrder(idMap)
+ 
+    @property #type: ignore
     @abstractmethod
     def children(self):
         pass
 
-    @children.setter
+    @children.setter #type: ignore
     @abstractmethod
     def children(self, value):
         pass
@@ -176,6 +187,7 @@ class Case:
         self.children = children
 
 class SwitchCase:
+    #TODO handle population of children actions
     def __init__(self, id, dataType:str, pairedMethodId:str, cases:List[Case]):
         self.id = id
         self.dataType = dataType
@@ -190,9 +202,9 @@ class PairedMethodCall:
     def __init__(self,method:MethodCall,pairedSwitchId:str):
         self.method = method
         self.pairedSwitchId = pairedSwitchId
-        self.pairedSwitch = None
+        self.pairedSwitch:Optional['SwitchCase'] = None
     def __str__(self):
-        return f"var = ({self.method})\nswitch({self.pairedSwitch})"
+        return f"var = ({self.method})\nswitch({self.pairedSwitchId})"
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
