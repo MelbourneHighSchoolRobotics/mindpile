@@ -1,0 +1,2 @@
+class InvalidSourceFormatError(Exception):
+    pass
