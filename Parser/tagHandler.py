@@ -1,5 +1,6 @@
 from Utility.types import *
 from Utility import utility as utility
+from Utility import exceptions as exceptions
 import IntermediateFormat
 from typing import Tuple, List, Optional, Union
 
@@ -11,9 +12,9 @@ def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, Optional[str]]:
     wire = None
     if "Wire" in elem.attrib:
         wire = elem.attrib["Wire"]
-    if elem.attrib["Id"] == "SequenceIn":
+    if elem.attrib["Id"] == "SequenceIn" or elem.attrib["Direction"] == "Input":
         return "in", wire
-    elif elem.attrib["Id"] == "SequenceOut":
+    elif elem.attrib["Id"] == "SequenceOut" or elem.attrib["Direction"] == "Output":
         return "out", wire
     else:
         raise NotImplementedError(
@@ -21,11 +22,8 @@ def getSequenceTerminalInfo(elem: Terminal) -> Tuple[str, Optional[str]]:
         )
 
 
-def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
-    childBlocks: List[IntermediateFormat.SequenceBlock] = []
-    seqIn: Optional[str] = None
-    seqOut: Optional[str] = None
-
+def getTerminalsFromParentElem(elem) -> Tuple[Optional[str],Optional[str]]:
+    seqIn,seqOut = None,None
     for child in elem:
         tag = utility.removeNameSpace(child.tag)
         if tag == "Terminal":
@@ -34,7 +32,17 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
                 seqIn = wire
             else:
                 seqOut = wire
-        elif tag == "ConfigurableWhileLoop.BuiltInMethod":
+    if seqIn == None and seqOut == None:
+        raise exceptions.InvalidSourceFormatError("Expected a Terminal where none existed")
+    return seqIn,seqOut
+
+def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
+    childBlocks: List[IntermediateFormat.SequenceBlock] = []
+    seqIn: Optional[str] = None
+    seqOut: Optional[str] = None
+    seqIn, seqOut = getTerminalsFromParentElem(elem)
+    for child in elem:
+        if tag == "ConfigurableWhileLoop.BuiltInMethod":
             if child.attrib["CallType"] == "LoopIndex":
                 childBlocks.append(methodCall(child[0]))
             else:
@@ -86,7 +94,7 @@ def methodCall(
         if tag == "ConfigurableMethodTerminal":
             if IO[0].attrib["Direction"] == "Input":
                 arguments.append(configureableMethodTerminal(IO))
-            else:  # is output
+            else:  # is outpu [0].attrib["Direction"] == "Output"t
                 outputs.append(configureableMethodTerminal(IO))
         elif tag == "Terminal":
             dir, wire = getSequenceTerminalInfo(IO)
@@ -118,13 +126,24 @@ def blockDiagram(elem):
 
 
 def configurableFlatCaseStructure(elem):
+    seqIn, seqOut = getTerminalsFromParentElem(elem)
+
     cases = []
-    return IntermediateFormat.SwitchCase(
+    for child in elem:
+        tag = utility.removeNameSpace(child.tag)
+        if tag == "ConfigurableFlatCaseStructure.Case":
+            caseChildren = []
+            for child2 in child:
+                caseChildren.append(translateElementToIRForm(child2))
+            newCase = IntermediateFormat.Case(child.attrib["Id"],child.attrib["Pattern"],caseChildren)
+            cases.append(newCase)
+    switch = IntermediateFormat.SwitchCase(
         elem.attrib["Id"],
         elem.attrib["DataType"],
         elem.attrib["PairedConfigurableMethodCall"],
         cases
          )
+    return IntermediateFormat.SequenceBlock(elem.attrib["Id"],seqIn,seqOut,switch)
 
 #ok
 #so basically
@@ -142,17 +161,7 @@ def pairedMethodCall(elem:PairedConfigurableMethodCall):
 
 
 def sequenceNode(elem:SequenceNode):
-    seqIn,seqOut = None,None
-    for child in elem:
-        tag = utility.removeNameSpace(child.tag)
-        if tag == "Terminal":
-            direction, wire = getSequenceTerminalInfo(child)
-            if direction == "in":
-                seqIn = wire
-            else:
-                seqOut = wire
-        else:
-            raise exceptions.InvalidSourceFormatError("Expected a Terminal in a SequenceNode")
+    seqIn, seqOut = getTerminalsFromParentElem(elem)
     return IntermediateFormat.SequenceBlock(elem.attrib["Id"],seqIn,seqOut,None)
 
 def translateElementToIRForm(elem):
@@ -166,9 +175,7 @@ def translateElementToIRForm(elem):
         "ConfigurableFlatCaseStructure": configurableFlatCaseStructure,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
-        "SequenceNode": lambda x: IntermediateFormat.SequenceBlock(
-            "DEBUG NOT USED", "DEBUG NOT USED", "DEBUG DONT USE", None
-        ),
+        "SequenceNode": sequenceNode,
         "Wire": lambda x: IntermediateFormat.SequenceBlock(
             "DEBUG NOT USED", "DEBUG NOT USED", "DEBUG DONT USE", None
         ),
