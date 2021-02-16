@@ -141,6 +141,20 @@ def pairedMethodCall(elem:PairedConfigurableMethodCall):
     return IntermediateFormat.SequenceBlock(methodBlock.id,methodBlock.inputWire,methodBlock.outputWire,pairedMethod)
 
 
+def sequenceNode(elem:SequenceNode):
+    seqIn,seqOut = None,None
+    for child in elem:
+        tag = utility.removeNameSpace(child.tag)
+        if tag == "Terminal":
+            direction, wire = getSequenceTerminalInfo(child)
+            if direction == "in":
+                seqIn = wire
+            else:
+                seqOut = wire
+        else:
+            raise exceptions.InvalidSourceFormatError("Expected a Terminal in a SequenceNode")
+    return IntermediateFormat.SequenceBlock(elem.attrib["Id"],seqIn,seqOut,None)
+
 def translateElementToIRForm(elem):
     tagToIRFunc = {
         "ConfigurableMethodCall": methodCall,
@@ -152,6 +166,9 @@ def translateElementToIRForm(elem):
         "ConfigurableFlatCaseStructure": configurableFlatCaseStructure,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately
         "ConfigurableWhileLoop.BuiltInMethod": lambda x: "",
+        "SequenceNode": lambda x: IntermediateFormat.SequenceBlock(
+            "DEBUG NOT USED", "DEBUG NOT USED", "DEBUG DONT USE", None
+        ),
         "Wire": lambda x: IntermediateFormat.SequenceBlock(
             "DEBUG NOT USED", "DEBUG NOT USED", "DEBUG DONT USE", None
         ),
