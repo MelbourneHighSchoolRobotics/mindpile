@@ -27,7 +27,11 @@ class MultiBlockContainer:
         inWireToBlock = {}
         for childBlock in self.children:
             if isinstance(childBlock,SequenceBlock):
-                inWireToBlock[childBlock.inputWire] = childBlock
+                if isinstance(childBlock.logic,SwitchCase):
+                    pass #ignore switchcases as they are not true starting blocks (input = None)
+                else:
+                    inWireToBlock[childBlock.inputWire] = childBlock
+
         return inWireToBlock
 
     def _resolveSwitchCases(self,idMap:Dict[str,Union['SequenceBlock','SwitchCase']]):
@@ -50,11 +54,22 @@ class MultiBlockContainer:
         while True:
             if(isinstance(currentBlock.logic,MultiBlockContainer)):
                 currentBlock.logic._sortWireOrder(idMap)
+            if(isinstance(currentBlock.logic,SwitchCase)):
+                for case in currentBlock.logic.cases:
+                    case._sortWireOrder(idMap)
+                pass
+
             sortedBlocks.append(currentBlock)
 
             if currentBlock.outputWire == None: 
+                if(isinstance(currentBlock.logic,PairedMethodCall)):
+                    if currentBlock.logic:
+                        currentBlock = currentBlock.logic.pairedSwitch #type: ignore
+                    else:
+                        raise Exception("You shouldn't have gotten here... how??") 
+                else:
+                    break
                 # when you've reached none, you're back to the start
-                break
             else:
                 currentBlock = inWireToBlock[currentBlock.outputWire]
         self.children = sortedBlocks #type: ignore
@@ -180,11 +195,23 @@ class WhileLoop(MultiBlockContainer):
 
 # THIS IS NOT DONE, DO NOT USE
 
-class Case:
-    def __init(self,id,pattern,children):
+class Case(MultiBlockContainer):
+    def __init__(self,id,pattern,children):
         self.id = id
         self.pattern = pattern
-        self.children = children
+        self._childInstructions = children
+    def __str__(self):
+        return f"Case({self.pattern})"
+    def __repr__(self):
+        return self.__str__()
+    @property
+    def children(self):
+        return self._childInstructions
+
+    @children.setter
+    def children(self, value):
+        self._childInstructions = value
+
 
 class SwitchCase:
     #TODO handle population of children actions
@@ -194,7 +221,20 @@ class SwitchCase:
         self.pairedMethodId = pairedMethodId
         self.cases = cases
     def __str__(self):
-        return f"Switch: TODO id:{self.id}"
+        outStr = []
+        for i,case in enumerate(self.cases):
+            if i == 0:
+                outStr.append(f"if switchVar == {str(self.cases[0].pattern)}:")
+            else:
+                outStr.append(f"elif switchVar == {str(self.cases[i].pattern)}:")
+            if self.cases[i].children != None:
+                for child in self.cases[i].children:
+                    outStr.append(f"    {child}")
+            else:
+                outStr.append("    pass")
+        return '\n'.join(outStr)
+        #return f"if SwitchVar == {str(self.cases[0])}:"
+        #return f"Switch: {str(self.cases)}"
 
 
 
@@ -202,9 +242,9 @@ class PairedMethodCall:
     def __init__(self,method:MethodCall,pairedSwitchId:str):
         self.method = method
         self.pairedSwitchId = pairedSwitchId
-        self.pairedSwitch:Optional['SwitchCase'] = None
+        self.pairedSwitch:Optional['SequenceBlock'] = None
     def __str__(self):
-        return f"var = ({self.method})\nswitch({self.pairedSwitchId})"
+        return f"PairedMethodCall: switchVar = ({self.method})"
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
