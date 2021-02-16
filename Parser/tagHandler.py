@@ -42,6 +42,7 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
     seqOut: Optional[str] = None
     seqIn, seqOut = getTerminalsFromParentElem(elem)
     for child in elem:
+        tag = utility.removeNameSpace(child.tag)
         if tag == "ConfigurableWhileLoop.BuiltInMethod":
             if child.attrib["CallType"] == "LoopIndex":
                 childBlocks.append(methodCall(child[0]))
