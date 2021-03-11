@@ -1,7 +1,7 @@
-from .types import Local, OutPort
-from .utils import MethodCall, Requires, Setup
+from .types import Local
+from .utils import MethodCall
 
-@MethodCall(target="LoopIndex.vix", LoopIndex=int ,i=Local(0))
+@MethodCall(target="LoopIndex.vix", LoopIndex=int, i=Local(0))
 def loopIndex():
     return '''
         LoopIndex = i
