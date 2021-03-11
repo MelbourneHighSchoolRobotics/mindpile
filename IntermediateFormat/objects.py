@@ -296,6 +296,8 @@ class SwitchCase:
         return '\n'.join(outStr)
         #return f"if SwitchVar == {str(self.cases[0])}:"
         #return f"Switch: {str(self.cases)}"
+    def toAST(self):
+        raise Exception("toAST Stubbed")
 
 
 
@@ -306,6 +308,9 @@ class PairedMethodCall:
         self.pairedSwitch:Optional['SequenceBlock'] = None
     def __str__(self):
         return f"PairedMethodCall: switchVar = ({self.method})"
+    def toAST(self):
+        raise Exception("toAST Stubbed")
+
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
