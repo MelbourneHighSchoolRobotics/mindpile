@@ -1,7 +1,6 @@
 import ast
 from collections import OrderedDict
 import copy
-import inspect
 import functools
 import textwrap
 from Utility.memo import memoise
@@ -13,36 +12,29 @@ setupCode = OrderedDict()
 def boolParser(input: str):
     return input == "True"
 
-def MethodCall(target: str):
+def MethodCall(target: str, **parameters):
     def decorator(func):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
         @memoise
         def memo():
             parsers = {}
-            parameters = inspect.signature(func).parameters
-            for param in parameters.values():
-                name = param.name
-                annotation = param.annotation
-
+            for name, type in parameters.items():
                 parser = None
-                if annotation == inspect.Parameter.empty:
-                    raise Exception("Mapping must contain type annotations")
-                elif annotation == int:
+                if type == int:
                     parser = int
-                elif annotation == str:
+                elif type == str:
                     parser = str
-                elif annotation == bool:
+                elif type == bool:
                     parser = boolParser
-                elif issubclass(annotation, EV3Type):
-                    parser = annotation.parse
+                elif issubclass(type, EV3Type):
+                    parser = type.parse
                 else:
-                    raise Exception(f"Mapping parameter {name} is of an unknown type {annotation}")
+                    raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
                 
                 parsers[name] = parser
 
             # Get the AST template
-            fakeArgs = { k: None for k in parameters.keys() }
-            stringTemplate = func(**fakeArgs)
+            stringTemplate = func()
             tree = ast.parse(textwrap.dedent(stringTemplate))
 
             class Template(ast.NodeTransformer):

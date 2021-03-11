@@ -18,16 +18,16 @@ def motorSetup():
         __motors = MotorDict()
     '''
 
-@MethodCall(target="MediumMotorUnlimited.vix")
+@MethodCall(target="MediumMotorUnlimited.vix", MotorPort=OutPort, Speed=int)
 @Requires(motorSetup)
-def mediumMotorUnlimited(MotorPort: OutPort, Speed: int):
+def mediumMotorUnlimited():
     return '''
         __motors[MotorPort].on(speed=Speed)
     '''
 
-@MethodCall(target="MediumMotorDistanceRotations.vix")
+@MethodCall(target="MediumMotorDistanceRotations.vix", MotorPort=OutPort, Speed=int, Rotations=int, BrakeAtEnd=bool)
 @Requires(motorSetup)
-def mediumMotorDistanceRotations(MotorPort: OutPort, Speed: int, Rotations: int, BrakeAtEnd: bool):
+def mediumMotorDistanceRotations():
     return '''
         __motors[MotorPort].on_for_rotations(speed=Speed, rotations=Rotations, brake=BrakeAtEnd)
     '''
