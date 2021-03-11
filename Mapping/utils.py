@@ -4,10 +4,17 @@ import copy
 import functools
 import textwrap
 from Utility.memo import memoise
-from .types import EV3Type
+from .types import EV3Type, Local
 
 methods = {}
 setupCode = OrderedDict()
+global_var_count = 0
+
+def newGlobalName():
+    global global_var_count
+    name = f"Var{global_var_count}"
+    global_var_count += 1
+    return name
 
 def boolParser(input: str):
     return input == "True"
@@ -18,6 +25,8 @@ def MethodCall(target: str, **parameters):
         @memoise
         def memo():
             parsers = {}
+            local_variables = {}
+
             for name, type in parameters.items():
                 parser = None
                 if type == int:
@@ -26,6 +35,8 @@ def MethodCall(target: str, **parameters):
                     parser = str
                 elif type == bool:
                     parser = boolParser
+                elif isinstance(type, Local):
+                    local_variables[name] = type
                 elif issubclass(type, EV3Type):
                     parser = type.parse
                 else:
@@ -39,11 +50,12 @@ def MethodCall(target: str, **parameters):
 
             class Template(ast.NodeTransformer):
                 def __init__(self, substitutions):
-                    for name in parameters.keys():
-                        if substitutions.get(name) is None:
+                    for name, parser in parsers.items():
+                        if parser is not None and substitutions.get(name) is None:
                             raise Exception(f"Couldn't map to parameter {name} for {target}")
 
                     self.substitutions = substitutions
+                    self.local_to_global_map = {}
 
                 def visit_Name(self, node: ast.Name):
                     name = node.id
@@ -54,6 +66,20 @@ def MethodCall(target: str, **parameters):
                             return value
                         else:
                             return ast.Constant(parser(value))
+                    elif local_variables.get(name) is not None:
+                        global_name = self.local_to_global_map.get(name)
+                        if global_name is None:
+                            global_name = newGlobalName()
+                            tree = ast.parse("")
+                            tree.body = [
+                                ast.Assign(
+                                    targets=[ast.Name(id=global_name, ctx=ast.Store())],
+                                    value=ast.Constant(type.initial_value)
+                                )
+                            ]
+                            setupCode[global_name] = tree
+                            self.local_to_global_map[name] = global_name
+                        return ast.Name(id=global_name, ctx=node.ctx)
                     return node
                 
                 def run(self):
@@ -91,7 +117,9 @@ def Requires(prereq):
     return decorator
 
 def startCodeGen():
+    global global_var_count
     setupCode.clear()
+    global_var_count = 0
 
 def generateSetupAST():
     tree = ast.parse("")
