@@ -12,7 +12,7 @@ global_var_count = 0
 
 def newGlobalName():
     global global_var_count
-    name = f"Var{global_var_count}"
+    name = f"var_{global_var_count}"
     global_var_count += 1
     return name
 
