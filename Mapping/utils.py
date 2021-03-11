@@ -16,6 +16,9 @@ def newGlobalName():
     global_var_count += 1
     return name
 
+def newTree():
+    return ast.parse("")
+
 def boolParser(input: str):
     return input == "True"
 
@@ -70,7 +73,7 @@ def MethodCall(target: str, **parameters):
                         global_name = self.local_to_global_map.get(name)
                         if global_name is None:
                             global_name = newGlobalName()
-                            tree = ast.parse("")
+                            tree = newTree()
                             tree.body = [
                                 ast.Assign(
                                     targets=[ast.Name(id=global_name, ctx=ast.Store())],
@@ -122,7 +125,7 @@ def startCodeGen():
     global_var_count = 0
 
 def generateSetupAST():
-    tree = ast.parse("")
+    tree = newTree()
     for block in setupCode.values():
         tree.body += block.body
     return tree

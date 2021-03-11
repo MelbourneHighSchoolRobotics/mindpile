@@ -23,6 +23,6 @@ startCodeGen()
 tree = ast.parse('')
 main = codeBlock.toAST()
 tree.body += generateSetupAST().body
-tree.body.append(main)
+tree.body += main
 tree = ast.fix_missing_locations(tree)
 print(ast.unparse(tree))

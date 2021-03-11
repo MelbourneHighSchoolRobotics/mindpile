@@ -6,9 +6,6 @@ import copy
 import re
 from Mapping.utils import methods
 
-def new_tree():
-    return ast.parse("")
-
 def to_body_ast(children):
     body = []
     for command in children:
@@ -360,9 +357,7 @@ class BlockDiagram(MultiBlockContainer):
         )
     
     def toAST(self):
-        tree = new_tree()
-        tree.body = to_body_ast(self.children)
-        return tree
+        return to_body_ast(self.children)
 
     @property
     def children(self):
