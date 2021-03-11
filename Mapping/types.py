@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+class Local:
+    def __init__(self, initial_value) -> None:
+        self.initial_value = initial_value
+
 class EV3Type(ABC):
     @staticmethod
     @abstractmethod
