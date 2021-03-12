@@ -45,7 +45,8 @@ def MethodCall(target: str, **parameters):
                 else:
                     raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
                 
-                parsers[name] = parser
+                if parser is not None:
+                    parsers[name] = parser
 
             # Get the AST template
             stringTemplate = func()
@@ -53,8 +54,8 @@ def MethodCall(target: str, **parameters):
 
             class Template(ast.NodeTransformer):
                 def __init__(self, substitutions):
-                    for name, parser in parsers.items():
-                        if parser is not None and substitutions.get(name) is None:
+                    for name in parsers.keys():
+                        if substitutions.get(name) is None:
                             raise Exception(f"Couldn't map to parameter {name} for {target}")
 
                     self.substitutions = substitutions
