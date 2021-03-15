@@ -38,6 +38,8 @@ def MethodCall(target: str, **parameters):
                     parser = str
                 elif type == bool:
                     parser = boolParser
+                elif type == float:
+                    parser = float
                 elif isinstance(type, Local):
                     local_variables[name] = type
                 elif issubclass(type, EV3Type):
