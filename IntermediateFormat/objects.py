@@ -210,9 +210,9 @@ class BreakMethodCall(MethodCall):
     
     def toAST(self):
         old_result = self.outputs[0]
-        method_tree = MethodCall.toMethodAST(self.name, self.arguments, [Output(old_result.name, old_result.type, "breakMethodResult")])
+        method_tree = MethodCall.toMethodAST(self.name, self.arguments, [Output(old_result.name, old_result.type, "breakCondition")])
         break_tree = ast.If(
-            test=ast.Name(id="breakMethodResult", ctx=ast.Load()),
+            test=ast.Name(id="breakCondition", ctx=ast.Load()),
             body=[ast.Break()],
             orelse=[]
         )
