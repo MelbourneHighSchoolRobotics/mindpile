@@ -1,7 +1,24 @@
+import ast
 from typing import List, Optional,Union,Dict
 import Utility
 from abc import abstractmethod
 import copy
+import re
+from Mapping.utils import methods
+
+def to_body_ast(children):
+    body = []
+    for command in children:
+        tree = command.toAST()
+        if tree is not None:
+            if isinstance(tree, ast.AST):
+                body.append(tree)
+            elif isinstance(tree, list):
+                body += tree
+            else:
+                # If you got here there's a bug in a toAST()
+                raise Exception("How did you get here?")
+    return body
 
 # ----------------Metaclasses/interfaces-----------#
 
@@ -152,6 +169,35 @@ class MethodCall:
             arguments=",".join([str(arg) for arg in self.arguments]),
             outputs=self.outputs,
         )
+    
+    @staticmethod
+    def stripArgumentName(name):
+        return re.sub(r'\W+', '', name) # Strip all non-alphanumeric from argument name
+
+    @staticmethod
+    def toMethodAST(name, arguments, outputs):
+        name = name.replace("\\", "")
+        method = methods[name]
+        args = {}
+        for arg in arguments:
+            arg_name = MethodCall.stripArgumentName(arg.name)
+            if arg.variableName is None:
+                args[arg_name] = arg.constValue
+            else:
+                args[arg_name] = ast.Name(id=arg.variableName, ctx=ast.Load())
+        
+        for arg in outputs:
+            arg_name = MethodCall.stripArgumentName(arg.name)
+            if arg.variableName is None:
+                args[arg_name] = ast.Name(id="__void", ctx=ast.Store())
+            else:
+                args[arg_name] = ast.Name(id=arg.variableName, ctx=ast.Store())
+
+        tree = method(**args)
+        return tree
+    
+    def toAST(self):
+        return MethodCall.toMethodAST(self.name, self.arguments, self.outputs)
 
 
 class BreakMethodCall(MethodCall):
@@ -161,6 +207,16 @@ class BreakMethodCall(MethodCall):
     def __str__(self):
         args = ",".join([str(arg) for arg in self.arguments])
         return f"if {self.name}({args}) -> {self.outputs}:\n    break"
+    
+    def toAST(self):
+        old_result = self.outputs[0]
+        method_tree = MethodCall.toMethodAST(self.name, self.arguments, [Output(old_result.name, old_result.type, "breakMethodResult")])
+        break_tree = ast.If(
+            test=ast.Name(id="breakMethodResult", ctx=ast.Load()),
+            body=[ast.Break()],
+            orelse=[]
+        )
+        return [method_tree, break_tree]
 
 
 # ------------------------- end method parts ------------------
@@ -183,6 +239,11 @@ class WhileLoop(MultiBlockContainer):
         return """While True:\n{whileString}""".format(
             whileString=Utility.utility.addSpacing(4, whileString)
         )
+    
+    def toAST(self):
+        body = to_body_ast(self.children)
+        tree = ast.While(test=ast.Constant(True), body=body, orelse=[])
+        return tree
 
     @property
     def children(self):
@@ -235,6 +296,8 @@ class SwitchCase:
         return '\n'.join(outStr)
         #return f"if SwitchVar == {str(self.cases[0])}:"
         #return f"Switch: {str(self.cases)}"
+    def toAST(self):
+        raise Exception("toAST Stubbed")
 
 
 
@@ -245,6 +308,9 @@ class PairedMethodCall:
         self.pairedSwitch:Optional['SequenceBlock'] = None
     def __str__(self):
         return f"PairedMethodCall: switchVar = ({self.method})"
+    def toAST(self):
+        raise Exception("toAST Stubbed")
+
 class SequenceBlock:
     """
     Interemediate stresentation of sequences. All blocks have terminals which dictate the flow of logic. This codifies that concept
@@ -271,6 +337,11 @@ class SequenceBlock:
     def __repr__(self):
         return f"<SequenceBlock({self.id},{self.inputWire},{self.outputWire},{self.logic})>"
 
+    def toAST(self):
+        if self.logic is not None:
+            return self.logic.toAST()
+        return None
+
 
 class BlockDiagram(MultiBlockContainer):
     """
@@ -289,6 +360,9 @@ class BlockDiagram(MultiBlockContainer):
                 4, "\n".join([str(command) for command in self._childInstructions])
             ),
         )
+    
+    def toAST(self):
+        return to_body_ast(self.children)
 
     @property
     def children(self):
