@@ -1,4 +1,5 @@
 from . import control
+from .actions import light
 from .actions import motors
 from .data import array
 from .data import compare
