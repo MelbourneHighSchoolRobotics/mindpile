@@ -5,6 +5,7 @@ from .data import compare
 from .data import constants
 from .data import logic
 from .data import maths
+from .data import random
 from .data import range
 from .data import round
 from .data import text
