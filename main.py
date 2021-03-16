@@ -4,7 +4,7 @@ import Utility.utility as utility
 import Parser
 from Mapping.utils import generateSetupAST, startCodeGen
 
-tree = ET.parse("TestInputs\/basic\/Program.ev3p")
+tree = ET.parse("TestInputs\/variables\/Program.ev3p")
 root = tree.getroot()
 xmlstr = ET.tostring(root, encoding="utf8", method="xml")
 
