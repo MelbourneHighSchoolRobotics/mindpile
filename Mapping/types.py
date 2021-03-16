@@ -44,6 +44,15 @@ class List(EV3Type):
         items = list(map(parser, items_str))
         return items
 
+class Literal(EV3Type):
+    def __init__(self, type):
+        self.parser = get_parser(type)
+        if self.parser is None:
+            raise Exception(f"Type {type} is not a supported parameter type")
+    
+    def parse(self, input: str):
+        return self.parser(input)
+
 class InPort(EV3Type):
     @staticmethod
     def parse(input: str):

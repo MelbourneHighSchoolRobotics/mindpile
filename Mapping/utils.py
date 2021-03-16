@@ -3,9 +3,8 @@ from collections import OrderedDict
 import copy
 import functools
 import textwrap
-from typing import List
 from Utility.memo import memoise
-from .types import EV3Type, Local, get_parser
+from .types import EV3Type, Local, Literal, get_parser
 from .boilerplate import boilerplate
 
 methods = {}
@@ -26,7 +25,7 @@ def MethodCall(target: str, **parameters):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
         @memoise
         def memo():
-            parsers = {}
+            types = {}
             local_variables = {}
 
             for name, type in parameters.items():
@@ -36,7 +35,7 @@ def MethodCall(target: str, **parameters):
                     parser = get_parser(type)
                     if parser is None:
                         raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
-                    parsers[name] = parser
+                    types[name] = type
 
             # Get the AST template
             stringTemplate = func()
@@ -44,7 +43,7 @@ def MethodCall(target: str, **parameters):
 
             class Template(ast.NodeTransformer):
                 def __init__(self, substitutions):
-                    for name in parsers.keys():
+                    for name in types.keys():
                         if substitutions.get(name) is None:
                             raise Exception(f"Couldn't map to parameter {name} for {target}")
 
@@ -53,10 +52,13 @@ def MethodCall(target: str, **parameters):
 
                 def visit_Name(self, node: ast.Name):
                     name = node.id
-                    if parsers.get(name) is not None:
-                        parser = parsers[name]
+                    if types.get(name) is not None:
+                        type = types[name]
+                        parser = get_parser(type)
                         value = self.substitutions[name]
                         if isinstance(value, ast.AST):
+                            if isinstance(type, Literal):
+                                raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
                             return value
                         else:
                             return ast.Constant(parser(value))
