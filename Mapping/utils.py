@@ -20,6 +20,36 @@ def newGlobalName():
 def newTree():
     return ast.parse("")
 
+def substitute_tree(tree):
+    class Template(ast.NodeTransformer):
+        def __init__(self, substitutions={}) -> None:
+            self.substitutions = substitutions
+
+        def visit_Name(self, node: ast.Name):
+            name = node.id
+            if self.substitutions.get(name) is not None:
+                value = self.substitutions[name]
+                if isinstance(value, ast.AST):
+                    return value
+                else:
+                    return ast.Constant(value)
+            return node
+        
+        def run(self):
+            return self.visit(copy.deepcopy(tree))
+    
+    def run(substitutions={}):
+        template = Template(substitutions)
+        return template.run()
+
+    return run
+
+def parse_code(code, substitutions={}):
+    tree = ast.parse(textwrap.dedent(code))
+    sub = substitute_tree(tree)
+    return sub(substitutions)
+p = parse_code
+
 def MethodCall(target: str, **parameters):
     def decorator(func):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
@@ -40,53 +70,41 @@ def MethodCall(target: str, **parameters):
             # Get the AST template
             stringTemplate = func()
             tree = ast.parse(textwrap.dedent(stringTemplate))
+            substitute = substitute_tree(tree)
 
-            class Template(ast.NodeTransformer):
-                def __init__(self, substitutions):
-                    for name in types.keys():
-                        if substitutions.get(name) is None:
-                            raise Exception(f"Couldn't map to parameter {name} for {target}")
-
-                    self.substitutions = substitutions
-                    self.local_to_global_map = {}
-
-                def visit_Name(self, node: ast.Name):
-                    name = node.id
-                    if types.get(name) is not None:
-                        type = types[name]
-                        parser = get_parser(type)
-                        value = self.substitutions[name]
-                        if isinstance(value, ast.AST):
-                            if isinstance(type, Literal):
-                                raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
-                            return value
-                        else:
-                            return ast.Constant(parser(value))
-                    elif local_variables.get(name) is not None:
-                        global_name = self.local_to_global_map.get(name)
-                        if global_name is None:
-                            global_name = newGlobalName()
-                            tree = newTree()
-                            tree.body = [
-                                ast.Assign(
-                                    targets=[ast.Name(id=global_name, ctx=ast.Store())],
-                                    value=ast.Constant(type.initial_value)
-                                )
-                            ]
-                            setupCode[global_name] = tree
-                            self.local_to_global_map[name] = global_name
-                        return ast.Name(id=global_name, ctx=node.ctx)
-                    return node
-                
-                def run(self):
-                    return self.visit(copy.deepcopy(tree))
-
-            return Template
+            return substitute, types, local_variables
         
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
-            Template = memo()
-            return Template(kwargs).run()
+            substitute, types, local_variables = memo()
+            substitutions = {}
+            
+            for name, type in types.items():
+                if kwargs.get(name) is None:
+                    raise Exception(f"Couldn't map to parameter {name} for {target}")
+
+                parser = get_parser(type)
+                value = kwargs[name]
+                if isinstance(value, ast.AST):
+                    if isinstance(type, Literal):
+                        raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
+                    substitutions[name] = value
+                else:
+                    substitutions[name] = ast.Constant(parser(value))
+            
+            for name, type in local_variables.items():
+                global_name = newGlobalName()
+                tree = newTree()
+                tree.body = [
+                    ast.Assign(
+                        targets=[ast.Name(id=global_name, ctx=ast.Store())],
+                        value=ast.Constant(type.initial_value)
+                    )
+                ]
+                setupCode[global_name] = tree
+                substitutions[name] = ast.Name(id=global_name)
+
+            return substitute(substitutions)
         methods[target] = wrappedFunc
         
         return func
@@ -97,7 +115,7 @@ def Setup(func):
     @memoise
     def wrapped():
         stringTemplate = func()
-        tree = ast.parse(textwrap.dedent(stringTemplate))
+        tree = p(stringTemplate)
         return tree
     return wrapped
 
@@ -119,7 +137,7 @@ def startCodeGen():
 
 def generateSetupAST():
     tree = newTree()
-    tree.body.append(ast.parse(boilerplate).body)
+    tree.body.append(p(boilerplate).body)
     for block in setupCode.values():
         tree.body += block.body
     return tree
