@@ -1,5 +1,5 @@
-from .types import OutPort
-from .utils import MethodCall, Requires, Setup
+from Mapping.types import InPort, OutPort, List
+from Mapping.utils import MethodCall, Requires, Setup
 
 @Setup
 def motorSetup():
