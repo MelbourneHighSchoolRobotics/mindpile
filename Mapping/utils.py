@@ -40,10 +40,7 @@ def MethodCall(target: str, **parameters):
 
             # Get the AST template
             stringTemplate = func()
-            if isinstance(stringTemplate, ast.AST):
-                tree = stringTemplate
-            else:
-                tree = ast.parse(textwrap.dedent(stringTemplate))
+            tree = ast.parse(textwrap.dedent(stringTemplate))
 
             class Template(ast.NodeTransformer):
                 def __init__(self, substitutions):
@@ -98,10 +95,7 @@ def Setup(func):
     @memoise
     def wrapped():
         stringTemplate = func()
-        if isinstance(stringTemplate, ast.AST):
-            tree = stringTemplate
-        else:
-            tree = ast.parse(textwrap.dedent(stringTemplate))
+        tree = ast.parse(textwrap.dedent(stringTemplate))
         return tree
     return wrapped
 
