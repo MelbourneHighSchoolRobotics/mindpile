@@ -37,7 +37,10 @@ class List(EV3Type):
     def parse(self, input: str):
         parser = self.parser
         body = input[1:-1] # Remove surrounding []
-        items_str = body.split(',')
+        if body == '':
+            items_str = []
+        else:
+            items_str = body.split(',')
         items = list(map(parser, items_str))
         return items
 
