@@ -3,8 +3,9 @@ from collections import OrderedDict
 import copy
 import functools
 import textwrap
+from typing import List
 from Utility.memo import memoise
-from .types import EV3Type, Local
+from .types import EV3Type, Local, get_parser
 from .boilerplate import boilerplate
 
 methods = {}
@@ -20,9 +21,6 @@ def newGlobalName():
 def newTree():
     return ast.parse("")
 
-def boolParser(input: str):
-    return input == "True"
-
 def MethodCall(target: str, **parameters):
     def decorator(func):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
@@ -32,23 +30,12 @@ def MethodCall(target: str, **parameters):
             local_variables = {}
 
             for name, type in parameters.items():
-                parser = None
-                if type == int:
-                    parser = int
-                elif type == str:
-                    parser = str
-                elif type == bool:
-                    parser = boolParser
-                elif type == float:
-                    parser = float
-                elif isinstance(type, Local):
+                if isinstance(type, Local):
                     local_variables[name] = type
-                elif issubclass(type, EV3Type):
-                    parser = type.parse
                 else:
-                    raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
-                
-                if parser is not None:
+                    parser = get_parser(type)
+                    if parser is None:
+                        raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
                     parsers[name] = parser
 
             # Get the AST template
