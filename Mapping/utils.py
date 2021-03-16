@@ -88,9 +88,9 @@ def MethodCall(target: str, **parameters):
         def wrappedFunc(**kwargs) -> ast.AST:
             Template = memo()
             return Template(kwargs).run()
-
         methods[target] = wrappedFunc
-        return wrappedFunc
+        
+        return func
     return decorator
 
 def Setup(func):
