@@ -5,6 +5,7 @@ import functools
 import textwrap
 from Utility.memo import memoise
 from .types import EV3Type, Local
+from .boilerplate import boilerplate
 
 methods = {}
 setupCode = OrderedDict()
@@ -129,6 +130,7 @@ def startCodeGen():
 
 def generateSetupAST():
     tree = newTree()
+    tree.body.append(ast.parse(boilerplate).body)
     for block in setupCode.values():
         tree.body += block.body
     return tree
