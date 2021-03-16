@@ -4,12 +4,12 @@ import Utility
 from abc import abstractmethod
 import copy
 import re
-from Mapping.utils import methods
+from Mapping.utils import methods, newGlobalName
 
-def to_body_ast(children):
+def to_body_ast(children, ctx={}):
     body = []
     for command in children:
-        tree = command.toAST()
+        tree = command.toAST(ctx=ctx)
         if tree is not None:
             if isinstance(tree, ast.AST):
                 body.append(tree)
@@ -175,7 +175,7 @@ class MethodCall:
         return re.sub(r'\W+', '', name) # Strip all non-alphanumeric from argument name
 
     @staticmethod
-    def toMethodAST(name, arguments, outputs):
+    def toMethodAST(name, arguments, outputs, ctx={}):
         name = name.replace("\\", "")
         method = methods[name]
         args = {}
@@ -193,11 +193,12 @@ class MethodCall:
             else:
                 args[arg_name] = ast.Name(id=arg.variableName, ctx=ast.Store())
 
-        tree = method(**args)
+        merged_args = {**args, **ctx}
+        tree = method(**merged_args)
         return tree
     
-    def toAST(self):
-        return MethodCall.toMethodAST(self.name, self.arguments, self.outputs)
+    def toAST(self, ctx={}):
+        return MethodCall.toMethodAST(self.name, self.arguments, self.outputs, ctx=ctx)
 
 
 class BreakMethodCall(MethodCall):
@@ -208,9 +209,10 @@ class BreakMethodCall(MethodCall):
         args = ",".join([str(arg) for arg in self.arguments])
         return f"if {self.name}({args}) -> {self.outputs}:\n    break"
     
-    def toAST(self):
+    def toAST(self, ctx={}):
         old_result = self.outputs[0]
-        method_tree = MethodCall.toMethodAST(self.name, self.arguments, [Output(old_result.name, old_result.type, "breakCondition")])
+        outputs = [Output(old_result.name, old_result.type, "breakCondition")]
+        method_tree = MethodCall.toMethodAST(self.name, self.arguments, outputs, ctx=ctx)
         break_tree = ast.If(
             test=ast.Name(id="breakCondition", ctx=ast.Load()),
             body=[ast.Break()],
@@ -240,9 +242,22 @@ class WhileLoop(MultiBlockContainer):
             whileString=Utility.utility.addSpacing(4, whileString)
         )
     
-    def toAST(self):
-        body = to_body_ast(self.children)
-        tree = ast.While(test=ast.Constant(True), body=body, orelse=[])
+    def toAST(self, ctx={}):
+        loop_iteration_count = ast.Name(id=newGlobalName(), ctx=ast.Store())
+
+        body = to_body_ast(self.children, ctx={ **ctx, "LoopIterationCount": loop_iteration_count })
+        tree = [
+            ast.Assign(targets=[loop_iteration_count], value=ast.Constant(value=1)),
+            ast.While(
+                test=ast.Constant(True),
+                body=(
+                    body + [
+                        ast.AugAssign(target=loop_iteration_count, op=ast.Add(), value=ast.Constant(value=1))
+                    ]
+                ),
+                orelse=[]
+            )
+        ]
         return tree
 
     @property
@@ -296,7 +311,7 @@ class SwitchCase:
         return '\n'.join(outStr)
         #return f"if SwitchVar == {str(self.cases[0])}:"
         #return f"Switch: {str(self.cases)}"
-    def toAST(self):
+    def toAST(self, ctx={}):
         raise Exception("toAST Stubbed")
 
 
@@ -308,7 +323,7 @@ class PairedMethodCall:
         self.pairedSwitch:Optional['SequenceBlock'] = None
     def __str__(self):
         return f"PairedMethodCall: switchVar = ({self.method})"
-    def toAST(self):
+    def toAST(self, ctx={}):
         raise Exception("toAST Stubbed")
 
 class SequenceBlock:
@@ -337,9 +352,9 @@ class SequenceBlock:
     def __repr__(self):
         return f"<SequenceBlock({self.id},{self.inputWire},{self.outputWire},{self.logic})>"
 
-    def toAST(self):
+    def toAST(self, ctx={}):
         if self.logic is not None:
-            return self.logic.toAST()
+            return self.logic.toAST(ctx=ctx)
         return None
 
 
@@ -361,8 +376,8 @@ class BlockDiagram(MultiBlockContainer):
             ),
         )
     
-    def toAST(self):
-        return to_body_ast(self.children)
+    def toAST(self, ctx={}):
+        return to_body_ast(self.children, ctx=ctx)
 
     @property
     def children(self):

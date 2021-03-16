@@ -17,11 +17,11 @@ for elem in root.iter(utility.addNameSpace("BlockDiagram")):
 codeBlock = Parser.tagHandler.translateElementToIRForm(root)
 print()
 codeBlock.sortInternalFlow()
-# print(codeBlock)
+print(codeBlock)
 # print("\n".join([str(block) for block in inloop]))
 startCodeGen()
 tree = ast.parse('')
-main = codeBlock.toAST()
+main = codeBlock.toAST(ctx={})
 tree.body += generateSetupAST().body
 tree.body += main
 tree = ast.fix_missing_locations(tree)
