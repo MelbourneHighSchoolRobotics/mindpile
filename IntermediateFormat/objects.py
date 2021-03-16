@@ -244,10 +244,18 @@ class WhileLoop(MultiBlockContainer):
     
     def toAST(self, ctx={}):
         loop_iteration_count = ast.Name(id=newGlobalName(), ctx=ast.Store())
+        loop_enter_time = ast.Name(id=newGlobalName(), ctx=ast.Store())
 
-        body = to_body_ast(self.children, ctx={ **ctx, "LoopIterationCount": loop_iteration_count })
+        body = to_body_ast(self.children, ctx={
+            **ctx,
+            "LoopIterationCount": loop_iteration_count,
+            "LoopEnterTime": loop_enter_time,
+        })
         tree = [
             ast.Assign(targets=[loop_iteration_count], value=ast.Constant(value=1)),
+            ast.Assign(targets=[loop_enter_time], value=(
+                ast.Call(func=ast.Attribute(value=ast.Name(id='time', ctx=ast.Load()), attr='time', ctx=ast.Load()), args=[], keywords=[])
+            )),
             ast.While(
                 test=ast.Constant(True),
                 body=(
