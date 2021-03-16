@@ -25,7 +25,7 @@ def mediumMotorUnlimited():
         __motors[MotorPort].on(speed=Speed)
     '''
 
-@MethodCall(target="MediumMotorDistanceRotations.vix", MotorPort=OutPort, Speed=float, Rotations=float, BrakeAtEnd=float)
+@MethodCall(target="MediumMotorDistanceRotations.vix", MotorPort=OutPort, Speed=float, Rotations=float, BrakeAtEnd=bool)
 @Requires(motorSetup)
 def mediumMotorDistanceRotations():
     return '''
