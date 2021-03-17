@@ -179,7 +179,7 @@ class MethodCall:
         name = name.replace("\\", "")
         method = methods.get(name)
         if method is None:
-            raise Exception("Method {name} is not implemented")
+            raise Exception(f"Method {name} is not implemented")
 
         args = {}
         for arg in arguments:
