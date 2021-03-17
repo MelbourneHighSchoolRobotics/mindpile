@@ -163,12 +163,16 @@ class MethodCall:
         self.arguments = arguments
         self.outputs = outputs
 
-    def __str__(self):
+    @staticmethod
+    def toString(name, arguments, outputs):
         return "{name}({arguments}) -> {outputs}".format(
-            name=self.name.split("\\.vix")[0],
-            arguments=",".join([str(arg) for arg in self.arguments]),
-            outputs=self.outputs,
+            name=name.split("\\.vix")[0],
+            arguments=",".join([str(arg) for arg in arguments]),
+            outputs=outputs,
         )
+    
+    def __str__(self):
+        return MethodCall.toString(self.name, self.arguments, self.outputs)
     
     @staticmethod
     def stripArgumentName(name):
@@ -179,7 +183,7 @@ class MethodCall:
         name = name.replace("\\", "")
         method = methods.get(name)
         if method is None:
-            raise Exception(f"Method {name} is not implemented")
+            raise Exception(f"Method not implemented: {MethodCall.toString(name, arguments, outputs)}")
 
         args = {}
         for arg in arguments:
