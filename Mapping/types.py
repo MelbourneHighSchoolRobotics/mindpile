@@ -56,13 +56,15 @@ class Literal(EV3Type):
 class InPort(EV3Type):
     @staticmethod
     def parse(input: str):
-        # Convert "1.4" -> "in4"
+        # Convert "1.4" -> 4
         # TODO: EV3 allows selecting ports from other paired bricks (specified by the number)
-        return "in" + input[2]
+        port = input[2]
+        return ord(port) - 48
 
 class OutPort(EV3Type):
     @staticmethod
     def parse(input: str):
-        # Convert "1.A" -> "outA"
+        # Convert "1.A" -> 1, "1.B" -> 2
         # TODO: EV3 allows selecting ports from other paired bricks (specified by the number)
-        return "out" + input[2]
+        port = input[2]
+        return ord(port) - 64
