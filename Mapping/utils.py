@@ -69,6 +69,9 @@ def create_parameter_substitutions(target, parameters, types, local_variables):
     for name, type in types.items():
         if parameters.get(name) is None:
             raise Exception(f"Couldn't map to parameter {name} for {target}")
+        value = parameters[name]
+        if isinstance(value, ast.AST) and isinstance(type, Literal):
+            raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
         substitutions[name] = parameters[name]
     
     for name, type in local_variables.items():
@@ -102,19 +105,14 @@ def MethodCall(target: str, **parameters):
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
             substitute, types, local_variables = memo()
+            substitutions = create_parameter_substitutions(target, kwargs, types, local_variables)
 
-            args = {}
             for name, type in types.items():
                 parser = get_parser(type)
-                value = kwargs[name]
-                if isinstance(value, ast.AST):
-                    if isinstance(type, Literal):
-                        raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
-                    args[name] = value
-                else:
-                    args[name] = ast.Constant(parser(value))
+                value = substitutions[name]
+                if not isinstance(value, ast.AST):
+                    substitutions[name] = ast.Constant(parser(value))
 
-            substitutions = create_parameter_substitutions(target, args, types, local_variables)
             return substitute(substitutions)
         methods[target] = wrappedFunc
         
@@ -132,19 +130,14 @@ def DynamicMethodCall(target: str, **parameters):
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
             types, local_variables = memo()
+            substitutions = create_parameter_substitutions(target, kwargs, types, local_variables)
 
-            args = {}
             for name, type in types.items():
                 parser = get_parser(type)
-                value = kwargs[name]
-                if isinstance(value, ast.AST):
-                    if isinstance(type, Literal):
-                        raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
-                    args[name] = value
-                else:
-                    args[name] = parser(value)
+                value = substitutions[name]
+                if not isinstance(value, ast.AST):
+                    substitutions[name] = parser(value)
 
-            substitutions = create_parameter_substitutions(target, args, types, local_variables)
             return func(**substitutions)
         methods[target] = wrappedFunc
 
