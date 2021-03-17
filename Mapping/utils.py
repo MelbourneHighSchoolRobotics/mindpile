@@ -8,6 +8,7 @@ from .types import EV3Type, Local, Literal, get_parser
 from .boilerplate import boilerplate
 
 methods = {}
+dynamicMethods = {}
 setupCode = OrderedDict()
 global_var_count = 0
 
@@ -50,22 +51,47 @@ def parse_code(code, substitutions={}):
     return sub(substitutions)
 p = parse_code
 
+def parse_parameter_types(parameters):
+    types = {}
+    local_variables = {}
+    for name, type in parameters.items():
+        if isinstance(type, Local):
+            local_variables[name] = type
+        else:
+            parser = get_parser(type)
+            if parser is None:
+                raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
+            types[name] = type
+    return types, local_variables
+
+def create_parameter_substitutions(target, parameters, types, local_variables):
+    substitutions = {}
+
+    for name, type in types.items():
+        if parameters.get(name) is None:
+            raise Exception(f"Couldn't map to parameter {name} for {target}")
+        substitutions[name] = parameters[name]
+    
+    for name, type in local_variables.items():
+        global_name = newGlobalName()
+        tree = newTree()
+        tree.body = [
+            ast.Assign(
+                targets=[ast.Name(id=global_name, ctx=ast.Store())],
+                value=ast.Constant(type.initial_value)
+            )
+        ]
+        setupCode[global_name] = tree
+        substitutions[name] = ast.Name(id=global_name)
+    
+    return substitutions
+
 def MethodCall(target: str, **parameters):
     def decorator(func):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
         @memoise
         def memo():
-            types = {}
-            local_variables = {}
-
-            for name, type in parameters.items():
-                if isinstance(type, Local):
-                    local_variables[name] = type
-                else:
-                    parser = get_parser(type)
-                    if parser is None:
-                        raise Exception(f"Mapping parameter {name} is of an unknown type {type}")
-                    types[name] = type
+            types, local_variables = parse_parameter_types(parameters)
 
             # Get the AST template
             stringTemplate = func()
@@ -77,36 +103,52 @@ def MethodCall(target: str, **parameters):
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
             substitute, types, local_variables = memo()
-            substitutions = {}
-            
-            for name, type in types.items():
-                if kwargs.get(name) is None:
-                    raise Exception(f"Couldn't map to parameter {name} for {target}")
 
+            args = {}
+            for name, type in types.items():
                 parser = get_parser(type)
                 value = kwargs[name]
                 if isinstance(value, ast.AST):
                     if isinstance(type, Literal):
                         raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
-                    substitutions[name] = value
+                    args[name] = value
                 else:
-                    substitutions[name] = ast.Constant(parser(value))
-            
-            for name, type in local_variables.items():
-                global_name = newGlobalName()
-                tree = newTree()
-                tree.body = [
-                    ast.Assign(
-                        targets=[ast.Name(id=global_name, ctx=ast.Store())],
-                        value=ast.Constant(type.initial_value)
-                    )
-                ]
-                setupCode[global_name] = tree
-                substitutions[name] = ast.Name(id=global_name)
+                    args[name] = ast.Constant(parser(value))
 
+            substitutions = create_parameter_substitutions(target, args, types, local_variables)
             return substitute(substitutions)
         methods[target] = wrappedFunc
         
+        return func
+    return decorator
+
+def DynamicMethodCall(target: str, **parameters):
+    def decorator(func):
+        # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
+        @memoise
+        def memo():
+            types, local_variables = parse_parameter_types(parameters)
+            return types, local_variables
+    
+        @functools.wraps(func)
+        def wrappedFunc(**kwargs) -> ast.AST:
+            types, local_variables = memo()
+
+            args = {}
+            for name, type in types.items():
+                parser = get_parser(type)
+                value = kwargs[name]
+                if isinstance(value, ast.AST):
+                    if isinstance(type, Literal):
+                        raise Exception(f"Expected literal for parameter {name} of {target}, got variable")
+                    args[name] = value
+                else:
+                    args[name] = parser(value)
+
+            substitutions = create_parameter_substitutions(target, args, types, local_variables)
+            return func(**substitutions)
+        dynamicMethods[target] = wrappedFunc
+
         return func
     return decorator
 
