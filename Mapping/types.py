@@ -72,3 +72,13 @@ class OutPort(EV3Type):
             return None
         port = input[2]
         return ord(port) - 64
+
+class OutPortPair(EV3Type):
+    @staticmethod
+    def parse(input: str):
+        # Convert "1.A+D" -> 14, "1.B+C" -> 23
+        if len(input) > 5:
+            return None
+        portLeft = ord(input[2]) - 64
+        portRight = ord(input[4]) - 64
+        return portLeft * 10 + portRight
