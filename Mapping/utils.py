@@ -46,6 +46,8 @@ def substitute_tree(tree):
 
 def parse_code(code, substitutions={}):
     tree = ast.parse(textwrap.dedent(code))
+    if len(substitutions) == 0:
+        return tree
     sub = substitute_tree(tree)
     return sub(substitutions)
 p = parse_code
