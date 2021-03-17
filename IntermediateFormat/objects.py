@@ -235,8 +235,9 @@ class WhileLoop(MultiBlockContainer):
     Intermediate stresntation of the special while loop
     """
 
-    def __init__(self, childInstructions):
+    def __init__(self, label, childInstructions):
         super().__init__()
+        self._label = label
         self._childInstructions = childInstructions
 
     def __str__(self):
@@ -257,6 +258,7 @@ class WhileLoop(MultiBlockContainer):
             **ctx,
             "LoopIterationCount": loop_iteration_count,
             "LoopEnterTime": loop_enter_time,
+            "LoopLabel": self.label,
         })
         tree = [
             ast.Assign(targets=[loop_iteration_count], value=ast.Constant(value=1)),
@@ -274,6 +276,10 @@ class WhileLoop(MultiBlockContainer):
             )
         ]
         return tree
+    
+    @property
+    def label(self):
+        return self._label
 
     @property
     def children(self):

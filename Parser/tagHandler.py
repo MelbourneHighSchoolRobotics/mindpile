@@ -53,7 +53,8 @@ def whileLoop(elem: WhileLoop) -> IntermediateFormat.SequenceBlock:
         else:
             childBlocks.append(translateElementToIRForm(child))
 
-    loop = IntermediateFormat.WhileLoop(childBlocks)
+    label = elem.attrib["InterruptName"]
+    loop = IntermediateFormat.WhileLoop(label, childBlocks)
     return IntermediateFormat.SequenceBlock(elem.attrib["Id"], seqIn, seqOut, loop)
 
 

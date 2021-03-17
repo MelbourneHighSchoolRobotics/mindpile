@@ -11,3 +11,4 @@ Using mypy for types and black for code-auto-formatting
 
 - Display: Doesn't support displaying images, white colour, or text size
 - Sound: Doesn't support playing files, repeat play type, or stopping sounds
+- Loop Interrupt: Only supports breaking out of a loop it is directly inside. It can't break out more than 1 layer

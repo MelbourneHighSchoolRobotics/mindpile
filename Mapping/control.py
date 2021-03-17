@@ -1,10 +1,20 @@
-from .utils import MethodCall
+from .types import Literal
+from .utils import MethodCall, DynamicMethodCall, p
 
 @MethodCall(target="LoopIndex.vix", LoopIterationCount=int, LoopIndex=int)
 def loopIndex():
     return '''
         LoopIndex = LoopIterationCount - 1
     '''
+
+@DynamicMethodCall(target="ToggleInterrupt.vix", InterruptName=Literal(str), LoopLabel=Literal(str))
+def loopInterrupt(InterruptName, LoopLabel):
+    if LoopLabel != InterruptName:
+        raise Exception(f"Loop Interrupt {InterruptName} only supports breaking a loop it is directly inside")
+
+    return p('''
+        break
+    ''')
 
 @MethodCall(target="StopAfterNumberIterations.vix", IterationsToRun=int, LoopIterationCount=int, Result=bool)
 def stopAfterNumberIterations():
