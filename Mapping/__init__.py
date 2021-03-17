@@ -2,6 +2,7 @@ from . import control
 from .actions import largeMotor
 from .actions import light
 from .actions import mediumMotor
+from .actions import steering
 from .data import array
 from .data import compare
 from .data import constants
