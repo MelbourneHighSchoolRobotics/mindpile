@@ -9,7 +9,7 @@ def steeringSetup():
         steeringControllers = {}
         def steering(port):
             if port is None:
-                return None
+                raise Exception("Steering block does not have a port specified")
             port = int(port)
 
             controller = steeringControllers.get(port)
