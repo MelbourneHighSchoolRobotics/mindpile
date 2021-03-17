@@ -6,4 +6,3 @@ Using mypy for types and black for code-auto-formatting
 
 ## Blocks Not Implemented
 
-- Advanced Maths Block
