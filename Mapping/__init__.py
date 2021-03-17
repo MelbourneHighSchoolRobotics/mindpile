@@ -6,6 +6,7 @@ from .actions import mediumMotor
 from .actions import sound
 from .actions import steering
 from .actions import tank
+from .advanced import comment
 from .data import array
 from .data import compare
 from .data import constants
