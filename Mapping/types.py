@@ -1,13 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+def intParser(input: str):
+    return int(float(input))
+
 def boolParser(input: str):
     return input == "True"
 
 def get_parser(type):
     parser = None
     if type == int:
-        parser = int
+        parser = intParser
     elif type == str:
         parser = str
     elif type == bool:
