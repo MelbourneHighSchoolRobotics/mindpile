@@ -206,6 +206,12 @@ class MethodCall:
     
     def toAST(self, ctx={}):
         return MethodCall.toMethodAST(self.name, self.arguments, self.outputs, ctx=ctx)
+    
+    def setResultVariable(self, newVariable):
+        for output in self.outputs:
+            if output.name == "Result":
+                output.variableName = newVariable
+                break
 
 
 class BreakMethodCall(MethodCall):
@@ -217,16 +223,16 @@ class BreakMethodCall(MethodCall):
         return f"if {self.name}({args}) -> {self.outputs}:\n    break"
     
     def toAST(self, ctx={}):
-        old_result = self.outputs[0]
-        outputs = list(self.outputs)
-        outputs[0] = Output(old_result.name, old_result.type, "breakCondition")
-        method_tree = MethodCall.toMethodAST(self.name, self.arguments, outputs, ctx=ctx)
-        break_tree = ast.If(
-            test=ast.Name(id="breakCondition", ctx=ast.Load()),
-            body=[ast.Break()],
-            orelse=[]
-        )
-        return [method_tree, break_tree]
+        self.setResultVariable("breakCondition")
+        tree = [
+            super().toAST(ctx=ctx),
+            ast.If(
+                test=ast.Name(id="breakCondition", ctx=ast.Load()),
+                body=[ast.Break()],
+                orelse=[]
+            )
+        ]
+        return tree
 
 
 class WaitForMethodCall(MethodCall):
@@ -236,10 +242,8 @@ class WaitForMethodCall(MethodCall):
     def toAST(self, ctx={}):
         wait_enter_time = ast.Name(id=newGlobalName(), ctx=ast.Store())
         
-        old_result = self.outputs[0]
-        outputs = list(self.outputs)
-        outputs[0] = Output(old_result.name, old_result.type, "waitBreakCondition")
-        body = MethodCall.toMethodAST(self.name, self.arguments, outputs, ctx={
+        self.setResultVariable("waitBreakCondition")
+        body = super().toAST(ctx={
             **ctx,
             "WaitEnterTime": wait_enter_time,
         })
