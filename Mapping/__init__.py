@@ -1,4 +1,5 @@
 from . import control
+from .actions import largeMotor
 from .actions import light
 from .actions import mediumMotor
 from .data import array
