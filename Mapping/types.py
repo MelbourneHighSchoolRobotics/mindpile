@@ -58,6 +58,8 @@ class InPort(EV3Type):
     def parse(input: str):
         # Convert "1.4" -> 4
         # TODO: EV3 allows selecting ports from other paired bricks (specified by the number)
+        if len(input) > 3:
+            return None
         port = input[2]
         return ord(port) - 48
 
@@ -66,5 +68,7 @@ class OutPort(EV3Type):
     def parse(input: str):
         # Convert "1.A" -> 1, "1.B" -> 2
         # TODO: EV3 allows selecting ports from other paired bricks (specified by the number)
+        if len(input) > 3:
+            return None
         port = input[2]
         return ord(port) - 64
