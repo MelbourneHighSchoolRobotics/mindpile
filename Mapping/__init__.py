@@ -3,6 +3,7 @@ from .actions import display
 from .actions import largeMotor
 from .actions import light
 from .actions import mediumMotor
+from .actions import sound
 from .actions import steering
 from .actions import tank
 from .data import array
