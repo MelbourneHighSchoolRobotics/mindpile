@@ -8,7 +8,6 @@ from .types import EV3Type, Local, Literal, get_parser
 from .boilerplate import boilerplate
 
 methods = {}
-dynamicMethods = {}
 setupCode = OrderedDict()
 global_var_count = 0
 
@@ -147,7 +146,7 @@ def DynamicMethodCall(target: str, **parameters):
 
             substitutions = create_parameter_substitutions(target, args, types, local_variables)
             return func(**substitutions)
-        dynamicMethods[target] = wrappedFunc
+        methods[target] = wrappedFunc
 
         return func
     return decorator

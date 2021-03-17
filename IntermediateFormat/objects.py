@@ -4,7 +4,7 @@ import Utility
 from abc import abstractmethod
 import copy
 import re
-from Mapping.utils import methods, dynamicMethods, newGlobalName
+from Mapping.utils import methods, newGlobalName
 
 def to_body_ast(children, ctx={}):
     body = []
@@ -179,7 +179,7 @@ class MethodCall:
         name = name.replace("\\", "")
         method = methods.get(name)
         if method is None:
-            method = dynamicMethods[name]
+            raise Exception("Method {name} is not implemented")
 
         args = {}
         for arg in arguments:
