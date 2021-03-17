@@ -82,7 +82,7 @@ def configureableMethodTerminal(
 
 
 def methodCall(
-    elem: MethodCall, isBreakMethod=False
+    elem: MethodCall, isBreakMethod=False, isWaitForMethod=False
 ) -> IntermediateFormat.SequenceBlock:
 
     functionName = elem.attrib["Target"]
@@ -108,12 +108,17 @@ def methodCall(
             raise NotImplementedError("Unexpected tag in method call")
     if isBreakMethod:
         method = IntermediateFormat.BreakMethodCall(functionName, arguments, outputs)
+    elif isWaitForMethod:
+        method = IntermediateFormat.WaitForMethodCall(functionName, arguments, outputs)
     else:
         method = IntermediateFormat.MethodCall(functionName, arguments, outputs)
 
     return IntermediateFormat.SequenceBlock(
         elem.attrib["Id"], seqInputWire, seqOutputWire, method
     )
+
+def configurableWaitForMethodCall(elem: MethodCall):
+    return methodCall(elem, isWaitForMethod=True)
 
 # THIS IS HARDCODED - unsure if this will prove problematic
 def startBlock(elem):
@@ -172,7 +177,7 @@ def translateElementToIRForm(elem):
         "ConfigurableWhileLoop": whileLoop,
         "StartBlock": startBlock,
         "BlockDiagram": blockDiagram,
-        "ConfigurableWaitFor": methodCall,
+        "ConfigurableWaitFor": configurableWaitForMethodCall,
         "PairedConfigurableMethodCall": pairedMethodCall,  # TODO check this probably needs special handling for the paired swich
         "ConfigurableFlatCaseStructure": configurableFlatCaseStructure,
         "Terminal": lambda x: "Terminal??",  # these need to be handled appropriately

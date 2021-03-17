@@ -39,3 +39,9 @@ def timeCompareLoop():
     return '''
         Result = time.time() >= LoopEnterTime + HowLong
     '''
+
+@MethodCall(target="TimeCompare.vix", HowLong=float, Result=bool, WaitEnterTime=float)
+def timeCompareWait():
+    return '''
+        Result = time.time() >= WaitEnterTime + HowLong
+    '''

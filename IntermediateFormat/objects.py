@@ -218,7 +218,8 @@ class BreakMethodCall(MethodCall):
     
     def toAST(self, ctx={}):
         old_result = self.outputs[0]
-        outputs = [Output(old_result.name, old_result.type, "breakCondition")]
+        outputs = list(self.outputs)
+        outputs[0] = Output(old_result.name, old_result.type, "breakCondition")
         method_tree = MethodCall.toMethodAST(self.name, self.arguments, outputs, ctx=ctx)
         break_tree = ast.If(
             test=ast.Name(id="breakCondition", ctx=ast.Load()),
@@ -226,6 +227,40 @@ class BreakMethodCall(MethodCall):
             orelse=[]
         )
         return [method_tree, break_tree]
+
+
+class WaitForMethodCall(MethodCall):
+    def __init__(self, name, arguments, outputs):
+        super().__init__(name, arguments, outputs)
+    
+    def toAST(self, ctx={}):
+        wait_enter_time = ast.Name(id=newGlobalName(), ctx=ast.Store())
+        
+        old_result = self.outputs[0]
+        outputs = list(self.outputs)
+        outputs[0] = Output(old_result.name, old_result.type, "waitBreakCondition")
+        body = MethodCall.toMethodAST(self.name, self.arguments, outputs, ctx={
+            **ctx,
+            "WaitEnterTime": wait_enter_time,
+        })
+        tree = [
+            ast.Assign(targets=[wait_enter_time], value=(
+                ast.Call(func=ast.Attribute(value=ast.Name(id='time', ctx=ast.Load()), attr='time', ctx=ast.Load()), args=[], keywords=[])
+            )),
+            ast.While(
+                test=ast.Constant(True),
+                body=[
+                    body,
+                    ast.If(
+                        test=ast.Name(id="waitBreakCondition", ctx=ast.Load()),
+                        body=[ast.Break()],
+                        orelse=[]
+                    )
+                ],
+                orelse=[]
+            )
+        ]
+        return tree
 
 
 # ------------------------- end method parts ------------------
