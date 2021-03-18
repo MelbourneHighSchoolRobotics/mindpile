@@ -144,12 +144,14 @@ def configurableFlatCaseStructure(elem):
                 caseChildren.append(translateElementToIRForm(child2))
             newCase = IntermediateFormat.Case(child.attrib["Id"],child.attrib["Pattern"],caseChildren)
             cases.append(newCase)
+    defaultCaseId = elem.attrib["Default"]
     switch = IntermediateFormat.SwitchCase(
         elem.attrib["Id"],
         elem.attrib["DataType"],
         elem.attrib["PairedConfigurableMethodCall"],
-        cases
-         )
+        cases,
+        defaultCaseId
+    )
     return IntermediateFormat.SequenceBlock(elem.attrib["Id"],seqIn,seqOut,switch)
 
 #ok
