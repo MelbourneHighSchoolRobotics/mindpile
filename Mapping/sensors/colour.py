@@ -1,4 +1,4 @@
-from Mapping.types import InPort, OutPort, List
+from Mapping.types import InPort, Local, OutPort, List
 from Mapping.utils import MethodCall, Requires, Setup
 
 @Setup
@@ -50,4 +50,40 @@ def colourCompare():
     return '''
         Value = s(Port, ColorSensor).ambient_light_intensity
         Result = compare(Comparison, Value, Threshold)
+    '''
+
+@MethodCall(target="ColorChange.vix", Port=InPort, Color=int, Result=bool, initValue=Local(None))
+@Requires(colourSetup)
+def colourChange():
+    return '''
+        Color = s(Port, ColorSensor).color
+        if initValue is None:
+            initValue = Color
+        Result = Color != initValue
+        if Result:
+            initValue = None
+    '''
+
+@MethodCall(target="ColorReflectedIntensityChange.vix", Port=InPort, Direction=int, Amount=int, Value=int, Result=bool, initValue=Local(None))
+@Requires(colourSetup)
+def colourReflectedChange():
+    return '''
+        Value = s(Port, ColorSensor).reflected_light_intensity
+        if initValue is None:
+            initValue = Value
+        Result = compareDirection(Direction, Amount, initValue, Value)
+        if Result:
+            initValue = None
+    '''
+
+@MethodCall(target="ColorAmbientIntensityChange.vix", Port=InPort, Direction=int, Amount=int, Value=int, Result=bool, initValue=Local(None))
+@Requires(colourSetup)
+def colourAmbientChange():
+    return '''
+        Value = s(Port, ColorSensor).ambient_light_intensity
+        if initValue is None:
+            initValue = Value
+        Result = compareDirection(Direction, Amount, initValue, Value)
+        if Result:
+            initValue = None
     '''

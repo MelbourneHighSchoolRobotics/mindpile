@@ -46,4 +46,14 @@ def compare(comparison, a, b):
         return a < b
     elif comparison == 5:
         return a <= b
+    return False
+
+def compareDirection(direction, amount, a, b):
+    if direction == 0:
+        return b >= a + amount
+    elif direction == 1:
+        return b <= a - amount
+    elif direction == 2:
+        return (b >= a + amount) or (b <= a - amount)
+    return False
 '''
