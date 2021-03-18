@@ -18,3 +18,4 @@ from .data import round
 from .data import text
 from .data import variables
 from .sensors import brick
+from .sensors import colour
