@@ -32,4 +32,18 @@ def s(port, type=None):
         sensor = type(address=portName)
         sensors[portName] = sensor
     return sensor
+
+def compare(comparison, a, b):
+    if comparison == 0:
+        return a == b
+    elif comparison == 1:
+        return a != b
+    elif comparison == 2:
+        return a > b
+    elif comparison == 3:
+        return a >= b
+    elif comparison == 4:
+        return a < b
+    elif comparison == 5:
+        return a <= b
 '''
