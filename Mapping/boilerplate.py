@@ -35,9 +35,9 @@ def s(port, type=None):
 
 def compare(comparison, a, b):
     if comparison == 0:
-        return a == b
+        return math.isclose(a, b)
     elif comparison == 1:
-        return a != b
+        return not math.isclose(a, b)
     elif comparison == 2:
         return a > b
     elif comparison == 3:
