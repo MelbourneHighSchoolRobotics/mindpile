@@ -1,9 +1,9 @@
 import ast
 import xml.etree.ElementTree as ET
-import Utility.utility as utility
-import Parser
+import mindpile.Utility.utility as utility
+import mindpile.Parser as Parser
 import argparse
-from Mapping.utils import generateSetupAST, startCodeGen
+from mindpile.Mapping.utils import generateSetupAST, startCodeGen
 
 parser = argparse.ArgumentParser(description="Transpiles Mindstorms to ev3dev2 python.")
 
