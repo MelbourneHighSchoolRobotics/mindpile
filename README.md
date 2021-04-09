@@ -14,3 +14,9 @@ Using mypy for types and black for code-auto-formatting
 - Loop Interrupt: Only supports breaking out of a loop it is directly inside. It can't break out more than 1 layer
 - Brick Buttons: This probably has some bugs
 - Comment: Comments aren't inserted into Python code
+
+## Contributing
+
+Install the package locally with 
+
+    pip install -e  ./
