@@ -20,3 +20,4 @@ from .data import variables
 from .sensors import brick
 from .sensors import colour
 from .sensors import ir
+from .sensors import motor
