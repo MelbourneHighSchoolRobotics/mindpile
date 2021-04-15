@@ -21,6 +21,17 @@ def get_parser(type):
         parser = type.parse
     return parser
 
+def get_type(type_str: str):
+    types = {
+        "Int32": int,
+        "String": str,
+        "Boolean": bool,
+        "Single": float,
+        "Boolean[]": List(bool),
+        "Single[]": List(float)
+    }
+    return types[type_str]
+
 class Local:
     def __init__(self, initial_value) -> None:
         self.initial_value = initial_value

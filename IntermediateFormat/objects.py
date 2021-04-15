@@ -1,3 +1,4 @@
+from Mapping.types import get_parser
 import ast
 from typing import List, Optional,Union,Dict
 import Utility
@@ -5,6 +6,7 @@ from abc import abstractmethod
 import copy
 import re
 from Mapping.utils import methods, newGlobalName
+from Mapping.types import get_type, get_parser
 
 def to_body_ast(children, ctx={}):
     body = []
@@ -18,6 +20,8 @@ def to_body_ast(children, ctx={}):
             else:
                 # If you got here there's a bug in a toAST()
                 raise Exception("How did you get here?")
+    if len(body) == 0:
+        body.append(ast.Pass())
     return body
 
 # ----------------Metaclasses/interfaces-----------#
@@ -208,10 +212,14 @@ class MethodCall:
         return MethodCall.toMethodAST(self.name, self.arguments, self.outputs, ctx=ctx)
     
     def setResultVariable(self, newVariable):
+        if len(self.outputs) == 1:
+            self.outputs[0].variableName = newVariable
+            return
+
         for output in self.outputs:
             if output.name == "Result":
                 output.variableName = newVariable
-                break
+                return
 
 
 class BreakMethodCall(MethodCall):
@@ -351,11 +359,12 @@ class Case(MultiBlockContainer):
 
 class SwitchCase:
     #TODO handle population of children actions
-    def __init__(self, id, dataType:str, pairedMethodId:str, cases:List[Case]):
+    def __init__(self, id, dataType:str, pairedMethodId:str, cases:List[Case], defaultCaseId=str):
         self.id = id
         self.dataType = dataType
         self.pairedMethodId = pairedMethodId
         self.cases = cases
+        self.defaultCaseId = defaultCaseId
     def __str__(self):
         outStr = []
         for i,case in enumerate(self.cases):
@@ -371,9 +380,69 @@ class SwitchCase:
         return '\n'.join(outStr)
         #return f"if SwitchVar == {str(self.cases[0])}:"
         #return f"Switch: {str(self.cases)}"
+    
     def toAST(self, ctx={}):
-        raise Exception("toAST Stubbed")
+        switchVar = ast.Name(id="switchVar", ctx=ast.Load())
+        type = get_type(self.dataType)
+        parser = get_parser(type)
 
+        def compare(value):
+            if type == str:
+                # Strip out surrounding quotes in strings
+                value = value[1:-1]
+            value = parser(value)
+            v = ast.Constant(value=value)
+
+            if type == int:
+                return ast.Compare(
+                    left=ast.Call(func=ast.Name(id='int', ctx=ast.Load()), args=[switchVar], keywords=[]),
+                    ops=[ast.Eq()],
+                    comparators=[v]
+                )
+            elif type == float:
+                return ast.Call(
+                    func=ast.Attribute(value=ast.Name(id='math', ctx=ast.Load()), attr='isclose', ctx=ast.Load()),
+                    args=[
+                        switchVar,
+                        v,
+                    ],
+                    keywords=[]
+                )
+
+            return ast.Compare(
+                left=switchVar,
+                ops=[ast.Eq()],
+                comparators=[v]
+            )
+        
+        defaultCase = None
+        for case in self.cases:
+            if case.id == self.defaultCaseId:
+                defaultCase = case
+                break
+        if type != str and defaultCase.pattern == '"Unused"':
+            defaultCase = None
+
+        childCase = None
+        for case in reversed(self.cases):
+            if case is defaultCase:
+                continue
+            if type != str and case.pattern == '"Unused"':
+                continue
+
+            if childCase is None:
+                childCase = ast.If(
+                    test=compare(case.pattern),
+                    body=to_body_ast(case.children),
+                    orelse=[] if defaultCase is None else to_body_ast(defaultCase.children)
+                )
+            else:
+                childCase = ast.If(
+                    test=compare(case.pattern),
+                    body=to_body_ast(case.children),
+                    orelse=[childCase]
+                )
+        return childCase
 
 
 class PairedMethodCall:
@@ -384,7 +453,8 @@ class PairedMethodCall:
     def __str__(self):
         return f"PairedMethodCall: switchVar = ({self.method})"
     def toAST(self, ctx={}):
-        raise Exception("toAST Stubbed")
+        self.method.setResultVariable("switchVar")
+        return self.method.toAST(ctx=ctx)
 
 class SequenceBlock:
     """

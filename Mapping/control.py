@@ -1,6 +1,24 @@
 from .types import Literal
 from .utils import MethodCall, DynamicMethodCall, p
 
+@MethodCall(target="CaseSelector_Boolean.vix", Boolean=bool, Result=bool)
+def caseSelectorBoolean():
+    return '''
+        Result = Boolean
+    '''
+
+@MethodCall(target="CaseSelector_Numeric.vix", Number=int, Result=int)
+def caseSelectorNumeric():
+    return '''
+        Result = Number
+    '''
+
+@MethodCall(target="CaseSelector_String.vix", String=str, Result=str)
+def caseSelectorString():
+    return '''
+        Result = String
+    '''
+
 @MethodCall(target="LoopIndex.vix", LoopIterationCount=int, LoopIndex=int)
 def loopIndex():
     return '''
