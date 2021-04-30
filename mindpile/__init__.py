@@ -7,6 +7,7 @@ from mindpile.Mapping.utils import generateSetupAST, startCodeGen
 __version__ = "0.0.1"
 
 def to_python(ev3p_path):
+    startCodeGen()
     tree = ET.parse(ev3p_path)
     root = tree.getroot()
 
@@ -15,7 +16,6 @@ def to_python(ev3p_path):
 
     codeBlock = Parser.tagHandler.translateElementToIRForm(root)
     codeBlock.sortInternalFlow()
-    startCodeGen()
     tree = ast.parse('')
     main = codeBlock.toAST(ctx={})
     tree.body += generateSetupAST().body
