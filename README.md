@@ -15,3 +15,9 @@ Using mypy for types and black for code-auto-formatting
 - Brick Buttons: This probably has some bugs
 - Motor Sensors: You must use a motor from that port before reading the value
 - Comment: Comments aren't inserted into Python code
+
+## Contributing
+
+Install the package locally with 
+
+    pip install -e  ./
