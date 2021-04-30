@@ -8,30 +8,28 @@ def m(port, type=None):
     if port is None:
         raise Exception("Motor block does not have a port specified")
     port = int(port)
+    portName = f"out{chr(port+64)}"
 
-    motor = motors.get(port)
-    if motor is None:
+    if portName not in motors:
         if type is None:
-            portName = f"out{chr(port+64)}"
             raise Exception(f"Can't use motor {portName} without knowing its type")
         motor = type(address=portName)
-        motors[port] = motor
-    return motor
+        motors[portName] = motor
+    return motors[portName]
 
 sensors = {}
 def s(port, type=None):
     if port is None:
         raise Exception("Sensor block does not have a port specified")
     port = int(port)
+    portName = f"in{chr(port+48)}"
 
-    sensor = sensors.get(portName)
-    if sensor is None:
-        portName = f"in{chr(port+48)}"
+    if portName not in sensors:
         if type is None:
             raise Exception(f"Can't use sensor {portName} without knowing its type")
         sensor = type(address=portName)
         sensors[portName] = sensor
-    return sensor
+    return sensors[portName]
 
 def compare(comparison, a, b):
     if comparison == 0:
