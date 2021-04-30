@@ -22,3 +22,18 @@ def to_python(ev3p_path):
     tree.body += main
     tree = ast.fix_missing_locations(tree)
     return ast.unparse(tree)
+
+def from_ev3(ev3_path):
+    import os
+    import tempfile
+    from zipfile import ZipFile
+    # Some preliminary checks
+    if not ev3_path.endswith(".ev3"):
+        raise ValueError("The mindstorms file to extract should have the `.ev3` file ending.")
+    # First -> Unzip the .ev3 file into a temporary location. Extract the ev3p file.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with ZipFile(ev3_path, "r") as zipObj:
+            zipObj.extractall(tmpdir)
+        # Second -> Generate the python code.
+        python_source = to_python(os.path.join(tmpdir, "Program.ev3p"))
+        return python_source
