@@ -90,6 +90,14 @@ def create_parameter_substitutions(target, parameters, types, local_variables):
     
     return substitutions
 
+def create_setup_code(func):
+    prereqs = getattr(func, "__MINDPILE_PREREQS", None)
+    if prereqs is not None:
+        for p in prereqs:
+            if setupCode.get(p) is None:
+                tree = p()
+                setupCode[p] = tree
+
 def MethodCall(target: str, **parameters):
     def decorator(func):
         # Memoise the heavy lifting of template generation so it is only run once and only if this MethodCall is used
@@ -106,6 +114,8 @@ def MethodCall(target: str, **parameters):
         
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
+            create_setup_code(func)
+
             substitute, types, local_variables = memo()
             substitutions = create_parameter_substitutions(target, kwargs, types, local_variables)
 
@@ -131,6 +141,8 @@ def DynamicMethodCall(target: str, **parameters):
     
         @functools.wraps(func)
         def wrappedFunc(**kwargs) -> ast.AST:
+            create_setup_code(func)
+
             types, local_variables = memo()
             substitutions = create_parameter_substitutions(target, kwargs, types, local_variables)
 
@@ -157,13 +169,10 @@ def Setup(func):
 
 def Requires(prereq):
     def decorator(func):
-        @functools.wraps(func)
-        def wrapped(*args, **kwargs):
-            if setupCode.get(prereq) is None:
-                tree = prereq()
-                setupCode[prereq] = tree
-            return func(*args, **kwargs)
-        return wrapped
+        prereqs = getattr(func, "__MINDPILE_PREREQS", set())
+        prereqs.add(prereq)
+        setattr(func, "__MINDPILE_PREREQS", prereqs)
+        return func
     return decorator
 
 def startCodeGen():
