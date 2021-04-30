@@ -10,6 +10,7 @@ from .boilerplate import boilerplate
 methods = {}
 setupCode = OrderedDict()
 global_var_count = 0
+global_runs_count = 0
 
 def newGlobalName():
     global global_var_count
@@ -167,9 +168,10 @@ def Requires(prereq):
     return decorator
 
 def startCodeGen():
-    global global_var_count
+    global global_var_count, global_runs_count
     setupCode.clear()
     global_var_count = 0
+    global_runs_count += 1
 
 def generateSetupAST():
     tree = newTree()

@@ -3,11 +3,12 @@ import functools
 def memoise(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        if not wrapper.hasResult:
+        from mindpile.Mapping.utils import global_runs_count
+        if wrapper.hasResult != global_runs_count:
             wrapper.result = func(*args, **kwargs)
-            wrapper.hasResult = True
+            wrapper.hasResult = global_runs_count
         return wrapper.result
     wrapper.result = None
-    wrapper.hasResult = False
+    wrapper.hasResult = -1
 
     return wrapper
