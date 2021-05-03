@@ -1,4 +1,5 @@
 from . import control
+from . import ev3sim
 from .actions import display
 from .actions import largeMotor
 from .actions import light

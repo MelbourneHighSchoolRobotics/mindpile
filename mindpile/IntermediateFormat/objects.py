@@ -306,6 +306,10 @@ class WhileLoop(MultiBlockContainer):
             "LoopEnterTime": loop_enter_time,
             "LoopLabel": self.label,
         })
+
+        if ctx["ev3sim_support"]:
+            body.append(methods["ev3sim_wait_for_tick.vix"]())
+
         tree = [
             ast.Assign(targets=[loop_iteration_count], value=ast.Constant(value=1)),
             ast.Assign(targets=[loop_enter_time], value=(
