@@ -1,4 +1,4 @@
-# mMindpile
+# mindpile
 
 A transpiler for EV3 Mindstorms to ev3dev2 Python.
 
