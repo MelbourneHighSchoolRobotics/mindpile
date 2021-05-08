@@ -1,8 +1,12 @@
-# Mindpile
+# mMindpile
 
-A transpiler for EV3 mindstorms to ev3dev2 Python.
+A transpiler for EV3 Mindstorms to ev3dev2 Python.
 
-Using mypy for types and black for code-auto-formatting
+Using mypy for types and black for code-auto-formatting.
+
+## Using
+
+[ev3sim](https://github.com/MelbourneHighSchoolRobotics/ev3sim) includes native mindpile support, this is the easiest way to get started.
 
 ## Blocks Not Implemented
 
