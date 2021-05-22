@@ -4,7 +4,7 @@ import mindpile.Utility.utility as utility
 import mindpile.Parser as Parser
 from mindpile.Mapping.utils import generateSetupAST, startCodeGen
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 def to_python(ev3p_path, ev3sim_support=False):
     startCodeGen()
